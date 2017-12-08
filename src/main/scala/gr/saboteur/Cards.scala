@@ -71,7 +71,11 @@ case class Card(prop: CardType,
     BOTTOM -> bottom
   )
 
-  def place(side: Direction, other: Card): Boolean ={
+  def connect(side: Direction, other: Card): Boolean ={
+    ways(side) && fit(side, other)
+  }
+
+  def fit(side: Direction, other: Card): Boolean ={
     ways(side) == other.ways(Direction.opposite(side))
   }
 
@@ -80,7 +84,7 @@ case class Card(prop: CardType,
     cards.toList
   }
 
-  override def toString: String = id+ " " + prop.toString
+  override def toString: String = id + " " + prop.toString
 }
 
 object Cards {

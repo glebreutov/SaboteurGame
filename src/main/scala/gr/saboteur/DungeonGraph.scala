@@ -31,9 +31,10 @@ class DungeonGraph (val graph: Map[Location, Card]){
   def fit(pos: Location, card: Card): Boolean ={
     val sbl = neighbors(pos)
     val (row, _) = pos
-    val booleans = sbl.map(e => card.place(e._1, graph(e._2)))
-    lazy val cardsFit = booleans.reduceLeft(_ && _)
-    !graph.contains(pos) && row > 0 && row <= DungeonGraph.GRAPH_HEIGHT && sbl.nonEmpty && cardsFit
+    lazy val cardsFit = sbl.map(e => card.fit(e._1, graph(e._2))).reduceLeft(_ && _)
+    lazy val cardsConnect = sbl.map(e => card.connect(e._1, graph(e._2))).reduceLeft(_ || _)
+
+    !graph.contains(pos) && row > 0 && row <= DungeonGraph.GRAPH_HEIGHT && sbl.nonEmpty && cardsFit && cardsConnect
   }
 
   def +(elt: (Location, Card)): DungeonGraph = {
@@ -106,7 +107,7 @@ class DungeonGraph (val graph: Map[Location, Card]){
     val maxVal = graph.map(v => v._1._2).max
     for (i <- 0 to DungeonGraph.GRAPH_HEIGHT){
       val list = graph.filter(p => p._1._1 == i).map(p => (p._1._2, p._2)).toList
-      val pad = minVal - list.map(p => p._1).min.abs
+      val pad = minVal - (list.map(p => p._1) :+ 0).min.abs
 
       print(" " * pad)
       for (i <- minVal to maxVal){

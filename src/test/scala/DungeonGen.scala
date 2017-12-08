@@ -14,7 +14,7 @@ object DungeonGen extends App{
   }
   var graph: DungeonGraph = DungeonGraph.init(0)
   var cards: List[Card] = Cards.deal().filter(c => c.prop == DUNGEON)
-
+  val TREASURES_LOC = DungeonGraph.TREASURE_LOCATIONS.map(x => (DungeonGraph.GRAPH_HEIGHT, x))
   while (cards.nonEmpty){
     val card = cards.head
     val outs = graph.graph.keys.toList
@@ -29,6 +29,8 @@ object DungeonGen extends App{
       //println(correctOuts, len)
       graph += (correctOuts(if (len > 0) r.nextInt(len) else 0) -> card)
       cards = cards.tail
+      graph.printMap()
+      println()
     }
     //println(cards.length)
   }

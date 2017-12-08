@@ -2,9 +2,13 @@ import gr.saboteur._
 import org.scalatest.{FlatSpec, Matchers}
 
 class CardCompatibility extends FlatSpec with Matchers{
-  val one = new Card(DUNGEON, top = false, bottom = true, right = true)
-  val two = new Card(DUNGEON, top = true)
-  one.place(BOTTOM, two) should be (true)
-  one.place(LEFT, two) should be (true)
-  one.place(RIGHT, two) should be (false)
+//  val one = new Card(DUNGEON, top = false, bottom = true, right = true)
+//  val two = new Card(DUNGEON, top = true)
+//  one.fit(BOTTOM, two) should be (true)
+//  one.fit(LEFT, two) should be (true)
+//  one.fit(RIGHT, two) should be (false)
+
+  val nextOne = Card.dungeon(true, true, true, true)
+
+  nextOne.fit(TOP, Card.dungeon(left = true, right = true)) should be (false)
 }

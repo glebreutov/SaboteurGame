@@ -1,20 +1,39 @@
 package gr.saboteur
 
 import gr.saboteur.DungeonGraph.Location
-import gr.saboteur.Ways.{BOTTOM, LEFT, RIGHT, TOP}
 
-object CardType extends Enumeration{
-  val CardType = Value
-  val START, GOLD, ORE, DUNGEON, BOOM, REVEAL, BRAKE_LANTERN,
-  FIX_LANTERN, BRAKE_TRUCK, FIX_TRUCK, DEADEND, BRAKE_PICK,
-  FIX_PICK, FIX_LANTERN_PICK, FIX_PICK_TRUCK, FIX_LANTERN_TRUCK = Value
+class CardType
+  class UnplayableCard extends CardType
+    object START extends UnplayableCard
+    object GOLD extends UnplayableCard
+    object ORE extends UnplayableCard
+  class MapCard extends CardType
+    object DUNGEON extends MapCard
+    object BOOM extends MapCard
+    object DEADEND extends MapCard
+  class PlayerRelated extends CardType
+    object BRAKE_LANTERN extends PlayerRelated
+    object FIX_LANTERN extends PlayerRelated
+    object BRAKE_TRUCK extends PlayerRelated
+    object FIX_TRUCK extends PlayerRelated
+    object BRAKE_PICK extends PlayerRelated
+    object FIX_PICK extends PlayerRelated
+    object FIX_LANTERN_PICK extends PlayerRelated
+    object FIX_PICK_TRUCK extends PlayerRelated
+    object FIX_LANTERN_TRUCK extends PlayerRelated
+  class SpecialCard extends CardType
+    object REVEAL extends SpecialCard
+
+class Direction {
 
 }
+object TOP extends Direction
+object BOTTOM extends Direction
+object LEFT extends Direction
+object RIGHT extends Direction
 
-object Ways extends Enumeration{
-  val TOP, BOTTOM, LEFT, RIGHT = Value
-
-  def opposite(g: Ways.Value): Ways.Value ={
+object Direction {
+  def opposite(g: Direction): Direction = {
     g match {
       case TOP => BOTTOM
       case BOTTOM => TOP
@@ -24,19 +43,20 @@ object Ways extends Enumeration{
   }
 }
 
+
 object Card{
   var idGen: Int = 0
 
   def dungeon(top: Boolean = false, bottom: Boolean = false, left: Boolean = false, right: Boolean = false): Card = {
-    new Card(CardType.DUNGEON, top, bottom, left, right)
+    new Card(DUNGEON, top, bottom, left, right)
   }
 
   def deadend(top: Boolean = false, bottom: Boolean = false, left: Boolean = false, right: Boolean = false): Card = {
-    new Card(CardType.DEADEND, top, bottom, left, right)
+    new Card(DEADEND, top, bottom, left, right)
   }
 
 }
-class Card(val prop: CardType.Value,
+class Card(val prop: CardType,
            val top: Boolean = false,
            val bottom: Boolean = false,
            val left: Boolean = false,
@@ -50,8 +70,8 @@ class Card(val prop: CardType.Value,
   BOTTOM -> bottom
   )
 
-  def place(side: Ways.Value, other: Card): Boolean ={
-    ways(side) == other.ways(Ways.opposite(side))
+  def place(side: Direction, other: Card): Boolean ={
+    ways(side) == other.ways(Direction.opposite(side))
   }
 
   def *(i: Int): List[Card] ={
@@ -70,7 +90,7 @@ object DungeonGraph {
 
   def init(goldPos: Int): DungeonGraph = {
     def card(pos: Int): Card = {
-      val artifact = if (pos == goldPos) CardType.GOLD else CardType.ORE
+      val artifact = if (pos == goldPos) GOLD else ORE
       new Card(artifact, top = true)
     }
 
@@ -78,7 +98,7 @@ object DungeonGraph {
     if (!TREASURE_LOCATIONS(goldPos)){
       throw new RuntimeException("gold card should be in (-2, 0, 2)")
     }
-    val g = Map((0, 0) -> new Card(CardType.START, bottom = true),
+    val g = Map((0, 0) -> new Card(START, bottom = true),
       (GRAPH_HEIGHT, -2) -> card(-2),
       (GRAPH_HEIGHT, 0) -> card(0),
       (GRAPH_HEIGHT, 2) -> card(2))
@@ -93,20 +113,20 @@ class DungeonGraph (val graph: Map[Location, Card]){
     val sbl = neighbors(pos)
     val (row, _) = pos
     lazy val cardsFit = sbl.map(e => card.place(e._1, graph(e._2))).reduceLeft(_ && _)
-    card.prop == CardType.DUNGEON && !graph.contains(pos) && row > 0 && row <= DungeonGraph.GRAPH_HEIGHT && sbl.nonEmpty && cardsFit
+    !graph.contains(pos) && row > 0 && row <= DungeonGraph.GRAPH_HEIGHT && sbl.nonEmpty && cardsFit
   }
 
   def +(elt: (Location, Card)): DungeonGraph ={
     val (pos, card) = elt
     if(fit(pos, card)){
       return new DungeonGraph(graph + (pos -> card))
-    }else if(card.prop == CardType.BOOM){
+    }else if(card.prop == BOOM){
       return new DungeonGraph(graph - pos)
     }
     this
   }
 
-  def neighbors(pos: Location, g: Map[Location, Card]=graph.toMap): Map[Ways.Value, Location] = {
+  def neighbors(pos: Location, g: Map[Location, Card]=graph.toMap): Map[Direction, Location] = {
     val (row, col) = pos
     val cards = Map(LEFT -> (row, col - 1),
       RIGHT -> (row, col + 1),
@@ -121,12 +141,12 @@ class DungeonGraph (val graph: Map[Location, Card]){
     if(graph.isEmpty){
       return false
     }
-    else if(g(coord).prop == CardType.GOLD){
+    else if(g(coord).prop == GOLD){
       return true
     }else{
       val sibleings = neighbors(coord, g)
       val graphTail = g - coord
-      for((k, v) <- sibleings){
+      for((_, v) <- sibleings){
         if(goldFound(v, graphTail)){
           return true
         }

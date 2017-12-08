@@ -11,19 +11,22 @@ object DwarfName extends Enumeration {
 }
 class Player (val role: PlayerRoles.Value, val id: DwarfName.Value){
 
+  override def toString: String = role + " " + id
 }
 
 object Game {
-  def start(players: Int): Game = {
-    def initPlayers: List[Player] = {
+  def start(playersCount: Int): Game = {
+
+    def initPlayers(): Seq[Player] = {
       val shuffledNames = Random.shuffle(DwarfName.values.toList)
-      for (i <- 0 to players) yield {
+      for (i <- 0 to playersCount) yield {
         val role = if (i == 0) PlayerRoles.SABOTEUR else PlayerRoles.DWARF
         val player = new Player(role, shuffledNames(i))
         player
       }
+    }
 
-      def initDeck: List[Card] = {
+      def initDeck(): List[Card] = {
         var deck: List[Card] = Card.dungeon(top = true, bottom = true) * 3
         deck :::= Card.dungeon(top = true, bottom = true, left = true, right = true) * 5
         deck :::= Card.dungeon(top = true, bottom = true, left = true, right = true) * 5
@@ -56,10 +59,12 @@ object Game {
         Random.shuffle(deck)
     }
 
-
+    val players = initPlayers
+    val deck  = initDeck
+    new Game(players, deck, DungeonGraph.init(0))
   }
 }
-class Game (val players: Seq[Player], val stack, val graph: DungeonGraph){
+class Game (val players: Seq[Player], val deck: Seq[Card], val graph: DungeonGraph){
 
 
 

@@ -17,5 +17,4 @@ class GraphTests extends FlatSpec with Matchers {
 
   graph.goldFound() should be (true)
   graph += (2, 1) -> Card.dungeon(left = true)
-  graph.printMap()
 }

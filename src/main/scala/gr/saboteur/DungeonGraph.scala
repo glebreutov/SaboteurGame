@@ -1,14 +1,16 @@
 package gr.saboteur
 
-import gr.saboteur.DungeonGraph.Location
+import gr.saboteur.DungeonGraph.Dot
 import Cards._
 
 object DungeonGraph {
   val GRAPH_HEIGHT = 6
   val TREASURE_DOTS = Set(0, -2, 2)
-  val TREASURES_POINTS = DungeonGraph.TREASURE_DOTS.map(x => (DungeonGraph.GRAPH_HEIGHT, x))
-  type Location = (Int, Int)
-  //case class Location(_1: Int, _2: Int)
+  val TREASURES_POINTS = DungeonGraph.TREASURE_DOTS.map(x => Dot(DungeonGraph.GRAPH_HEIGHT, x))
+
+  case class Dot(row: Int, col: Int){
+    def unapply(arg: Dot): Option[(Int, Int)] = Some((arg.row, arg.col))
+  }
 
   def init(goldPos: Int): DungeonGraph = {
     def card(pos: Int): Card = {
@@ -19,19 +21,18 @@ object DungeonGraph {
     if (!TREASURE_DOTS(goldPos)){
       throw new RuntimeException("gold card should be in (-2, 0, 2)")
     }
-    val tresures = TREASURE_DOTS
-      .map(r => (GRAPH_HEIGHT, r))
-        .map(l => l -> card(l._2)).toMap
+    val tresures = TREASURES_POINTS
+        .map(l => l -> card(l.col)).toMap
 
-    new DungeonGraph(tresures + ((0, 0) -> new Card(START, bottom = true)))
+    new DungeonGraph(tresures + (Dot(0, 0) -> new Card(START, bottom = true)))
   }
 }
-class DungeonGraph (val graph: Map[Location, Card]){
+class DungeonGraph (val graph: Map[Dot, Card]){
 
 
-  def fit(pos: Location, card: Card): Boolean ={
+  def fit(pos: Dot, card: Card): Boolean ={
     val sblPositions = neighbors(pos)
-    val (row, _) = pos
+    val Dot(row, _) = pos
 
     lazy val cardsFit = sblPositions.map(e => card.fit(e._1, graph(e._2))).reduceLeft(_ && _)
     lazy val cardsConnect = sblPositions.map(e => card.connect(e._1, graph(e._2))).reduceLeft(_ || _)
@@ -39,7 +40,7 @@ class DungeonGraph (val graph: Map[Location, Card]){
     !graph.contains(pos) && row > 0 && row <= DungeonGraph.GRAPH_HEIGHT && sblPositions.nonEmpty && cardsFit && cardsConnect && tocuhesNumTreasures < sblPositions.size
   }
 
-  def +(elt: (Location, Card)): DungeonGraph = {
+  def +(elt: (Dot, Card)): DungeonGraph = {
     val (pos, card) = elt
     if(fit(pos, card)){
       return new DungeonGraph(graph + (pos -> card))
@@ -49,18 +50,18 @@ class DungeonGraph (val graph: Map[Location, Card]){
     this
   }
 
-  def neighbors(pos: Location, g: Map[Location, Card]=graph.toMap): Map[Direction, Location] = {
-    val (row, col) = pos
-    val cards = Map(LEFT -> (row, col - 1),
-      RIGHT -> (row, col + 1),
-      TOP -> (row - 1, col),
-      BOTTOM -> (row + 1, col)
+  def neighbors(pos: Dot, g: Map[Dot, Card]=graph.toMap): Map[Direction, Dot] = {
+    val Dot(row, col) = pos
+    val cards = Map(LEFT -> Dot(row, col - 1),
+      RIGHT -> Dot(row, col + 1),
+      TOP -> Dot(row - 1, col),
+      BOTTOM -> Dot(row + 1, col)
     )
 
     cards.filter(e => g.contains(e._2))
   }
 
-  def goldFound(coord : Location=(0, 0), g: Map[Location, Card]=graph.toMap): Boolean = {
+  def goldFound(coord : Dot=Dot(0, 0), g: Map[Dot, Card]=graph.toMap): Boolean = {
     if(graph.isEmpty){
       return false
     }

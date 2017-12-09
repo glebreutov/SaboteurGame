@@ -1,6 +1,6 @@
 package gr.saboteur
 
-import gr.saboteur.DungeonGraph.Location
+import gr.saboteur.DungeonGraph.Dot
 
 import scala.collection.mutable.ListBuffer
 import scala.util.Random
@@ -62,7 +62,7 @@ class Game (val players: List[Player], val deck: List[Card], val graph: DungeonG
 //  }
 
 
-  def makeTurn(player: Player, card: Card, locaton: Location = null, other: Player = null): Game ={
+  def makeTurn(player: Player, card: Card, locaton: Dot = null, other: Player = null): Game ={
 
     //make turn
 

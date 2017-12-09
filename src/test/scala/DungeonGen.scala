@@ -1,15 +1,15 @@
-import gr.saboteur.DungeonGraph.Location
+import gr.saboteur.DungeonGraph.Dot
 import gr.saboteur._
 
 import scala.util.Random
 
 object DungeonGen extends App{
-  def nearDots(pos: Location) = {
-      val (row, col) = pos
-      List( (row, col - 1),
-        (row, col + 1),
-        (row - 1, col),
-        (row + 1, col)
+  def nearDots(pos: Dot) = {
+      val Dot(row, col) = pos
+      List( Dot(row, col - 1),
+        Dot(row, col + 1),
+        Dot(row - 1, col),
+        Dot(row + 1, col)
       )
   }
   var graph: DungeonGraph = DungeonGraph.init(0)
@@ -63,12 +63,12 @@ object DungeonGen extends App{
     throw new RuntimeException("No match")
   }
 
-  def printMap(graph: Map[Location, Card]) {
+  def printMap(graph: Map[Dot, Card]) {
 
-    val minVal = graph.map(v => v._1._2).min
-    val maxVal = graph.map(v => v._1._2).max
+    val minVal = graph.map(v => v._1.col).min
+    val maxVal = graph.map(v => v._1.col).max
     for (i <- 0 to DungeonGraph.GRAPH_HEIGHT){
-      val list = graph.filter(p => p._1._1 == i).map(p => (p._1._2, p._2)).toList
+      val list = graph.filter(p => p._1.row == i).map(p => (p._1.col, p._2)).toList
 
       for (j <- minVal to maxVal){
         val tuples = list.filter(q => q._1 == j)

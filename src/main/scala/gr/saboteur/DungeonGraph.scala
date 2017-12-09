@@ -13,9 +13,9 @@ object DungeonGraph {
   }
 
   def init(goldPos: Int): DungeonGraph = {
-    def card(pos: Int): Card = {
-      val artifact = if (pos == goldPos) GOLD else ORE
-      new Card(artifact, Top, Left, Right, Bottom)
+    def card(pos: Int): MapCard = {
+      if (pos == goldPos) GOLD(Top, Left, Right, Bottom) else ORE(Top, Left, Right, Bottom)
+
     }
 
     if (!TREASURE_DOTS(goldPos)){
@@ -24,13 +24,13 @@ object DungeonGraph {
     val tresures = TREASURES_POINTS
         .map(l => l -> card(l.col)).toMap
 
-    new DungeonGraph(tresures + (Dot(0, 0) -> new Card(START, Bottom)))
+    new DungeonGraph(tresures + (Dot(0, 0) -> START(Bottom)))
   }
 }
-class DungeonGraph (val graph: Map[Dot, Card]){
+class DungeonGraph (val graph: Map[Dot, MapCard]){
 
 
-  def fit(pos: Dot, card: Card): Boolean ={
+  def fit(pos: Dot, card: MapCard): Boolean ={
     val sblPositions = neighbors(pos)
     val Dot(row, _) = pos
 
@@ -40,11 +40,11 @@ class DungeonGraph (val graph: Map[Dot, Card]){
     !graph.contains(pos) && row > 0 && row <= DungeonGraph.GRAPH_HEIGHT && sblPositions.nonEmpty && cardsFit && cardsConnect && tocuhesNumTreasures < sblPositions.size
   }
 
-  def +(elt: (Dot, Card)): DungeonGraph = {
+  def +(elt: (Dot, MapCard)): DungeonGraph = {
     val (pos, card) = elt
     if(fit(pos, card)){
       return new DungeonGraph(graph + (pos -> card))
-    }else if(card.prop == BOOM){
+    }else if(card.isInstanceOf[BOOM]){
       return new DungeonGraph(graph - pos)
     }
     this
@@ -65,7 +65,7 @@ class DungeonGraph (val graph: Map[Dot, Card]){
     if(graph.isEmpty){
       return false
     }
-    else if(g(coord).prop == GOLD){
+    else if(g(coord).isInstanceOf[GOLD]){
       return true
     }else{
       val sibleings = neighbors(coord, g)

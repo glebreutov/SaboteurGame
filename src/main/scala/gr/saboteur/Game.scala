@@ -10,12 +10,14 @@ import scala.util.Random
 object DwarfName extends Enumeration {
   val Thorin, Fili, Kili, Balin, Dwalin, Oin, Gloin, Dori, Nori, Ori, Bifur, Bofur, Bambur = Value
 }
-class Player (val role: PlayerRoles, val id: String){
+abstract class Player (val id: String){
   var cards = ListBuffer[Card]()
-
-
-  override def toString: String = role + " " + id + " cards: " + cards
+  override def toString: String = id + " cards: " + cards
 }
+
+
+case class  DWARF(override val id: String) extends Player(id)
+case class  SABOTEUR(override val id: String) extends Player(id)
 
 object Game {
 
@@ -23,11 +25,9 @@ object Game {
 
     def initPlayers(): List[Player] = {
       val shuffledNames = Random.shuffle(DwarfName.values.toList.map(n => n.toString))
-      val players = for (i <- 0 to playersCount) yield {
-        val role = if (i == 0) SABOTEUR else DWARF
-        val player = new Player(role, shuffledNames(i))
-        player
-      }
+      val players = for (i <- 0 to playersCount)
+        yield if (i == 0) SABOTEUR(shuffledNames(i)) else DWARF(shuffledNames(i))
+
       players.toList
     }
 

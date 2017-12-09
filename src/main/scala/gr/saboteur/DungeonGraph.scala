@@ -42,12 +42,11 @@ class DungeonGraph (val graph: Map[Dot, MapCard]){
 
   def +(elt: (Dot, MapCard)): DungeonGraph = {
     val (pos, card) = elt
-    if(fit(pos, card)){
-      return new DungeonGraph(graph + (pos -> card))
-    }else if(card.isInstanceOf[BOOM]){
-      return new DungeonGraph(graph - pos)
-    }
-    this
+    if(fit(pos, card)) new DungeonGraph(graph + (pos -> card)) else this
+  }
+
+  def -(pos: Dot): DungeonGraph = {
+    new DungeonGraph(graph - pos)
   }
 
   def neighbors(pos: Dot, g: Map[Dot, Card]=graph.toMap): Map[Direction, Dot] = {

@@ -48,7 +48,10 @@ abstract class MapCard(val ways: Map[Direction, Boolean]) extends Card {
   def fit(side: Direction, oth: MapCard): Boolean ={
     ways(side) == oth.ways(Direction.opposite(side))
   }
+}
 
+case class UpsideDownCard(card: Card) extends MapCard{
+  throw new RuntimeException("Implement me")
 }
 
 
@@ -58,16 +61,19 @@ case class START(tunnels: Direction *) extends MapCard(tunnels : _*)
 case class GOLD(tunnels: Direction *) extends MapCard(tunnels : _*)
 case class ORE(tunnels: Direction *) extends MapCard(tunnels : _*)
 
-class PlayerRelated extends Card
-class  BRAKE_LANTERN extends PlayerRelated
-class  FIX_LANTERN extends PlayerRelated
-class  BRAKE_TRUCK extends PlayerRelated
-class  FIX_TRUCK extends PlayerRelated
-class  BRAKE_PICK extends PlayerRelated
-class  FIX_PICK extends PlayerRelated
-class  FIX_LANTERN_PICK extends PlayerRelated
-class  FIX_PICK_TRUCK extends PlayerRelated
-class  FIX_LANTERN_TRUCK extends PlayerRelated
+class SpellCard extends Card
+class Curse extends SpellCard
+class Crue extends SpellCard
+class  BRAKE_LANTERN extends Curse
+class  FIX_LANTERN extends Crue
+class  BRAKE_TRUCK extends Curse
+class  FIX_TRUCK extends Crue
+class  BRAKE_PICK extends Curse
+class  FIX_PICK extends Crue
+class  FIX_LANTERN_PICK extends Crue
+class  FIX_PICK_TRUCK extends Crue
+class  FIX_LANTERN_TRUCK extends Crue
+
 class SpecialCard extends Card
 class  REVEAL extends SpecialCard
 class BOOM extends SpecialCard

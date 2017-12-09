@@ -29,18 +29,20 @@ class PlayerRoles extends CardType
   object SABOTEUR extends PlayerRoles
 
 class Direction
-  object TOP extends Direction
-  object BOTTOM extends Direction
-  object LEFT extends Direction
-  object RIGHT extends Direction
+  object Top extends Direction
+  object Bottom extends Direction
+  object Left extends Direction
+  object Right extends Direction
 
 object Direction {
+  val directions = List(Top, Bottom, Left, Right)
+
   def opposite(g: Direction): Direction = {
     g match {
-      case TOP => BOTTOM
-      case BOTTOM => TOP
-      case LEFT => RIGHT
-      case RIGHT => LEFT
+      case Top => Bottom
+      case Bottom => Top
+      case Left => Right
+      case Right => Left
     }
   }
 }
@@ -48,28 +50,18 @@ object Direction {
 object Card{
   var idGen: Int = 0
 
-  def dungeon(top: Boolean = false, bottom: Boolean = false, left: Boolean = false, right: Boolean = false): Card = {
-    Card(DUNGEON, top, bottom, left, right)
-  }
-
-  def deadend(top: Boolean = false, bottom: Boolean = false, left: Boolean = false, right: Boolean = false): Card = {
-    Card(DEADEND, top, bottom, left, right)
-  }
-
 }
-case class Card(prop: CardType,
-                top: Boolean = false,
-                bottom: Boolean = false,
-                left: Boolean = false,
-                right: Boolean = false){
+case class Card(prop: CardType, tunnels: Direction *){
 
   val id = Card.idGen
   Card.idGen += 1
-  val ways = Map(LEFT -> left,
-    RIGHT -> right,
-    TOP -> top,
-    BOTTOM -> bottom
-  )
+
+  val ways: Map[Direction, Boolean] = Direction.directions.map(d => (d, tunnels.contains(d))).toMap
+
+  def top: Boolean = ways(Top)
+  def bottom: Boolean = ways(Bottom)
+  def left: Boolean = ways(Left)
+  def right: Boolean = ways(Right)
 
   def connect(side: Direction, other: Card): Boolean ={
     ways(side) && fit(side, other)
@@ -80,7 +72,7 @@ case class Card(prop: CardType,
   }
 
   def *(i: Int): List[Card] ={
-    val cards = for (_ <- 0 to i) yield new Card(prop, top, bottom, left, right)
+    val cards = for (_ <- 0 to i) yield new Card(prop, ways.filter(p => p._2).keys.toList: _*)
     cards.toList
   }
 
@@ -89,34 +81,34 @@ case class Card(prop: CardType,
 
 object Cards {
   def deck: List[Card] = {
-    var deck: List[Card] = Card.dungeon(top = true, bottom = true) * 3
-    deck :::= Card.dungeon(top = true, bottom = true, left = true, right = true) * 5
-    deck :::= Card.dungeon(top = true, bottom = true, left = true, right = true) * 5
-    deck :::= Card.dungeon(top = true, bottom = true, right = true) * 5
-    deck :::= Card.dungeon(bottom = true, left = true) * 4
-    deck :::= Card.dungeon(bottom = true, left = true, right = true) * 5
-    deck :::= Card.dungeon(bottom = true, right = true) * 5
-    deck :::= Card.dungeon(left = true, right = true) * 4
-    deck ::= Card.deadend(top = true, bottom = true)
-    deck ::= Card.deadend(top = true, bottom = true, left = true, right = true)
-    deck ::= Card.deadend(top = true, bottom = true, right = true)
-    deck ::= Card.deadend(left = true, bottom = true)
-    deck ::= Card.deadend(bottom = true, left = true, right = true)
-    deck ::= Card.deadend(right = true, bottom = true)
-    deck ::= Card.deadend(bottom = true)
-    deck ::= Card.deadend(left= true, right = true)
-    deck ::= Card.deadend(right = true)
-    deck :::= new Card(BRAKE_PICK) * 3
-    deck :::= new Card(FIX_PICK) * 2
-    deck :::= new Card(BRAKE_LANTERN) * 3
-    deck :::= new Card(FIX_LANTERN) * 2
-    deck :::= new Card(BRAKE_TRUCK) * 3
-    deck :::= new Card(FIX_TRUCK) * 2
-    deck :::= new Card(REVEAL) * 6
-    deck :::= new Card(BOOM) * 3
-    deck ::= new Card(FIX_LANTERN_PICK)
-    deck ::= new Card(FIX_PICK_TRUCK)
-    deck ::= new Card(FIX_LANTERN_TRUCK)
+    var deck: List[Card] = Card(DUNGEON, Top, Bottom) * 3
+    deck :::= Card(DUNGEON, Top, Bottom, Left, Right) * 5
+    deck :::= Card(DUNGEON, Top, Bottom, Left, Right) * 5
+    deck :::= Card(DUNGEON, Top, Bottom, Right) * 5
+    deck :::= Card(DUNGEON, Bottom, Left) * 4
+    deck :::= Card(DUNGEON, Bottom, Left, Right) * 5
+    deck :::= Card(DUNGEON, Bottom, Right) * 5
+    deck :::= Card(DUNGEON, Left, Right) * 4
+    deck ::= Card(DEADEND, Top, Bottom)
+    deck ::= Card(DEADEND, Top, Bottom, Left, Right)
+    deck ::= Card(DEADEND, Top, Bottom, Right)
+    deck ::= Card(DEADEND, Left, Bottom)
+    deck ::= Card(DEADEND, Bottom, Left, Right)
+    deck ::= Card(DEADEND, Right, Bottom)
+    deck ::= Card(DEADEND, Bottom)
+    deck ::= Card(DEADEND, Left, Right)
+    deck ::= Card(DEADEND, Right)
+    deck :::= Card(BRAKE_PICK) * 3
+    deck :::= Card(FIX_PICK) * 2
+    deck :::= Card(BRAKE_LANTERN) * 3
+    deck :::= Card(FIX_LANTERN) * 2
+    deck :::= Card(BRAKE_TRUCK) * 3
+    deck :::= Card(FIX_TRUCK) * 2
+    deck :::= Card(REVEAL) * 6
+    deck :::= Card(BOOM) * 3
+    deck ::= Card(FIX_LANTERN_PICK)
+    deck ::= Card(FIX_PICK_TRUCK)
+    deck ::= Card(FIX_LANTERN_TRUCK)
 
     deck
   }

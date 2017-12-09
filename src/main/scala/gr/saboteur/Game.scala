@@ -49,7 +49,6 @@ object Game {
 //  }
 }
 class Game (val players: List[Player], val deck: List[Card], val graph: DungeonGraph){
-  println(players)
 
   // operation with card
   // get new card

@@ -15,7 +15,7 @@ object DungeonGraph {
   def init(goldPos: Int): DungeonGraph = {
     def card(pos: Int): Card = {
       val artifact = if (pos == goldPos) GOLD else ORE
-      new Card(artifact, top = true, left = true, right = true, bottom = true)
+      new Card(artifact, Top, Left, Right, Bottom)
     }
 
     if (!TREASURE_DOTS(goldPos)){
@@ -24,7 +24,7 @@ object DungeonGraph {
     val tresures = TREASURES_POINTS
         .map(l => l -> card(l.col)).toMap
 
-    new DungeonGraph(tresures + (Dot(0, 0) -> new Card(START, bottom = true)))
+    new DungeonGraph(tresures + (Dot(0, 0) -> new Card(START, Bottom)))
   }
 }
 class DungeonGraph (val graph: Map[Dot, Card]){
@@ -52,10 +52,10 @@ class DungeonGraph (val graph: Map[Dot, Card]){
 
   def neighbors(pos: Dot, g: Map[Dot, Card]=graph.toMap): Map[Direction, Dot] = {
     val Dot(row, col) = pos
-    val cards = Map(LEFT -> Dot(row, col - 1),
-      RIGHT -> Dot(row, col + 1),
-      TOP -> Dot(row - 1, col),
-      BOTTOM -> Dot(row + 1, col)
+    val cards = Map(Left -> Dot(row, col - 1),
+      Right -> Dot(row, col + 1),
+      Top -> Dot(row - 1, col),
+      Bottom -> Dot(row + 1, col)
     )
 
     cards.filter(e => g.contains(e._2))

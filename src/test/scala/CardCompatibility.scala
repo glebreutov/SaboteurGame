@@ -8,8 +8,8 @@ class CardCompatibility extends FlatSpec with Matchers{
 //  one.fit(LEFT, two) should be (true)
 //  one.fit(RIGHT, two) should be (false)
 
-  Card.dungeon(true, true, true, true).fit(TOP, Card.dungeon(left = true, right = true)) should be (false)
-  Card.dungeon(left = true, right = true).fit(BOTTOM, Card.dungeon(top = true, bottom = true)) should be (false)
+  Card(DUNGEON, Direction.directions: _*).fit(Top, Card(DUNGEON, Left, Right)) should be (false)
+  Card(DUNGEON, Left , Right ).fit(Bottom, Card(DUNGEON, Top , Bottom )) should be (false)
 
 
 }

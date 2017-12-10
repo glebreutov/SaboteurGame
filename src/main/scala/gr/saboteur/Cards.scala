@@ -29,7 +29,7 @@ abstract class Card extends Cloneable {
     cards.toList
   }
 
-  //override def toString: String = prop.toString
+  override def toString = this.getClass.getSimpleName
 }
 abstract class MapCard(val ways: Map[Direction, Boolean]) extends Card {
 

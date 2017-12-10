@@ -1,6 +1,7 @@
 package gr.saboteur
 
 import gr.saboteur.DungeonGraph.Dot
+
 import scala.util.Random
 
 
@@ -24,7 +25,7 @@ case class Player (id: String, role: Role, hand: Set[Card], spells: Set[SpellCar
     val newSpells = spell match {
       case _ : Curse => spells + spell
       case _ : FIX_LANTERN => spells.filter(d => !d.isInstanceOf[BRAKE_LANTERN])
-      case _ : FIX_TRUCK => spells.filter(d => !d.isInstanceOf[FIX_TRUCK])
+      case _ : FIX_TRUCK => spells.filter(d => !d.isInstanceOf[BRAKE_PICK])
       case _ : FIX_PICK => spells.filter(d => !d.isInstanceOf[BRAKE_PICK])
       case _ : FIX_LANTERN_PICK=> spells.filter(d => !d.isInstanceOf[BRAKE_LANTERN] || !d.isInstanceOf[BRAKE_PICK])
       case _ : FIX_LANTERN_TRUCK=> spells.filter(d => !d.isInstanceOf[BRAKE_LANTERN] || !d.isInstanceOf[BRAKE_TRUCK])
@@ -32,18 +33,36 @@ case class Player (id: String, role: Role, hand: Set[Card], spells: Set[SpellCar
     }
     if(spells.size > 2) this else Player(id, role, hand, newSpells)
   }
-  override def toString: String = id + " cards: " + hand
+  override def toString: String = id + " spells: " + spells
 }
 
 
+sealed trait TurnType
+case object MakeTunnel extends TurnType
+case object CastSpell extends TurnType
+case object DestroyTunnel extends TurnType
+case object Pass extends TurnType
+case object RevealTreasure extends TurnType
 
-class Turn[T<:Card](val card: T)
+case class PlayersTurn(card: Card, location: Dot = null, victim: Player = null, upsideDown: Boolean = false){
+  def action(): TurnType = {
+    card match {
+      case _: MapCard if location != null => MakeTunnel
+      case _: SpellCard if victim != null => CastSpell
+      case _: REVEAL if location != null => RevealTreasure
+      case _: BOOM if location != null => DestroyTunnel
+      case _ => Pass
+    }
+  }
 
-case class MakeTunnel(override val card: MapCard, location: Dot, upsideDown: Boolean = false) extends Turn[MapCard](card)
-case class CastSpell(override val card: SpellCard, victim: Player) extends Turn[SpellCard](card)
-case class RevealTreasure(override val card: REVEAL, location: Dot) extends Turn[REVEAL](card)
-case class DestroyTunnel(override val card: BOOM, location: Dot) extends Turn[BOOM](card)
-case class Pass(override val card: Card) extends Turn[Card](card)
+  override def toString: String = {
+
+    val loc = if (location != null) location.toString else if (victim != null) victim.toString else ""
+    action() + " " + card + " " +loc
+  }
+}
+
+
 
 
 object Game {
@@ -58,11 +77,11 @@ object Game {
       if (i == 0) Player(shuffledNames(i), SABOTEUR, hand) else Player(shuffledNames(i), DWARF, hand)
     }
 
-    new Game(players.toList, deck, DungeonGraph.init(0))
+    new Game(players.toList, deck, DungeonGraph.init(0), List())
   }
 
 }
-class Game (val players: List[Player], val deck: List[Card], val dungeon: DungeonGraph){
+class Game (val players: List[Player], val deck: List[Card], val dungeon: DungeonGraph, val turns: List[PlayersTurn]){
 
   def checkCardPresence(card: Card): Unit ={
     if(!players.head.hand.contains(card)){
@@ -70,23 +89,34 @@ class Game (val players: List[Player], val deck: List[Card], val dungeon: Dungeo
     }
   }
 
-  def +(turn: MakeTunnel): Game = {
+  def +(turn: PlayersTurn): Game = {
+    turn.action() match {
+      case _: MakeTunnel.type => tunnel(turn)
+      case _: CastSpell.type  => castSpell(turn)
+      case _: RevealTreasure.type  => reval(turn)
+      case _: DestroyTunnel.type  => destroy(turn)
+      case _ => pass(turn)
+
+    }
+  }
+
+  def tunnel(turn: PlayersTurn): Game = {
     val current = players.head
     checkCardPresence(turn.card)
     if(current.spells.nonEmpty){
       throw new GameException("Player has spells on him, so can't build")
     }
-    val upadtedGraph = dungeon + (turn.location -> turn.card)
+    val upadtedGraph = dungeon + (turn.location -> turn.card.asInstanceOf[MapCard])
     if(upadtedGraph == dungeon)
       throw new GameException("Card doesn't fit")
 
-    new Game(players.tail :+ players.head.swap(turn.card, deck.head), deck.tail, upadtedGraph)
+    new Game(players.tail :+ players.head.swap(turn.card, deck.head), deck.tail, upadtedGraph, turns :+ turn)
   }
 
-  def +(turn: CastSpell): Game = {
+  def castSpell(turn: PlayersTurn): Game = {
     checkCardPresence(turn.card)
 
-    val victim = turn.victim.spell(turn.card)
+    val victim = turn.victim.spell(turn.card.asInstanceOf[SpellCard])
     if(victim == turn.victim){
       throw new GameException("Can't cast more this card")
     }
@@ -94,24 +124,24 @@ class Game (val players: List[Player], val deck: List[Card], val dungeon: Dungeo
     val updatedPlayers = for(player <- players.tail :+ players.head)
       yield if(player == turn.victim) victim else player
 
-    new Game(updatedPlayers.tail :+ updatedPlayers.head.swap(turn.card, deck.head), deck.tail, dungeon)
+    new Game(updatedPlayers.tail :+ updatedPlayers.head.swap(turn.card, deck.head), deck.tail, dungeon, turns :+ turn)
   }
 
-  def +(turn: RevealTreasure): Game = {
+  def reval(turn: PlayersTurn): Game = {
     checkCardPresence(turn.card)
-    new Game(players.tail :+ players.head.swap(turn.card, deck.head), deck.tail, dungeon)
+    new Game(players.tail :+ players.head.swap(turn.card, deck.head), deck.tail, dungeon, turns :+ turn)
   }
 
-  def +(turn: DestroyTunnel): Game = {
+  def destroy(turn: PlayersTurn): Game = {
     checkCardPresence(turn.card)
-    new Game(players.tail :+ players.head.swap(turn.card, deck.head), deck.tail, dungeon - turn.location)
+    new Game(players.tail :+ players.head.swap(turn.card, deck.head), deck.tail, dungeon - turn.location, turns :+ turn)
   }
 
-  def +(turn: Pass): Game = {
-    new Game(players.tail :+ players.head.swap(turn.card, deck.head), deck.tail, dungeon)
+  def pass(turn: PlayersTurn): Game = {
+    new Game(players.tail :+ players.head.swap(turn.card, deck.head), deck.tail, dungeon, turns :+ turn)
   }
 
-  def endOfGame() = dungeon.goldFound() || deck.isEmpty
+  def endOfGame() = dungeon.goldFound() || (deck.isEmpty && players.forall(p => p.hand.isEmpty))
 
 }
 

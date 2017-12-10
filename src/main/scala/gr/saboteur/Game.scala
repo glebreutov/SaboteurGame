@@ -41,7 +41,7 @@ class Turn[T<:Card](val card: T)
 
 case class MakeTunnel(override val card: MapCard, location: Dot, upsideDown: Boolean = false) extends Turn[MapCard](card)
 case class CastSpell(override val card: SpellCard, victim: Player) extends Turn[SpellCard](card)
-case class RevealTreasure(override val card: MapCard, location: Dot) extends Turn[MapCard](card)
+case class RevealTreasure(override val card: REVEAL, location: Dot) extends Turn[REVEAL](card)
 case class DestroyTunnel(override val card: BOOM, location: Dot) extends Turn[BOOM](card)
 case class Pass(override val card: Card) extends Turn[Card](card)
 
@@ -62,7 +62,7 @@ object Game {
   }
 
 }
-class Game (val players: List[Player], val deck: List[Card], val graph: DungeonGraph){
+class Game (val players: List[Player], val deck: List[Card], val dungeon: DungeonGraph){
 
   def checkCardPresence(card: Card): Unit ={
     if(!players.head.hand.contains(card)){
@@ -76,8 +76,8 @@ class Game (val players: List[Player], val deck: List[Card], val graph: DungeonG
     if(current.spells.nonEmpty){
       throw new GameException("Player has spells on him, so can't build")
     }
-    val upadtedGraph = graph + (turn.location -> turn.card)
-    if(upadtedGraph == graph)
+    val upadtedGraph = dungeon + (turn.location -> turn.card)
+    if(upadtedGraph == dungeon)
       throw new GameException("Card doesn't fit")
 
     new Game(players.tail :+ players.head.swap(turn.card, deck.head), deck.tail, upadtedGraph)
@@ -94,23 +94,24 @@ class Game (val players: List[Player], val deck: List[Card], val graph: DungeonG
     val updatedPlayers = for(player <- players.tail :+ players.head)
       yield if(player == turn.victim) victim else player
 
-    new Game(updatedPlayers.tail :+ updatedPlayers.head.swap(turn.card, deck.head), deck.tail, graph)
+    new Game(updatedPlayers.tail :+ updatedPlayers.head.swap(turn.card, deck.head), deck.tail, dungeon)
   }
 
   def +(turn: RevealTreasure): Game = {
     checkCardPresence(turn.card)
-    new Game(players.tail :+ players.head.swap(turn.card, deck.head), deck.tail, graph)
+    new Game(players.tail :+ players.head.swap(turn.card, deck.head), deck.tail, dungeon)
   }
 
   def +(turn: DestroyTunnel): Game = {
     checkCardPresence(turn.card)
-    new Game(players.tail :+ players.head.swap(turn.card, deck.head), deck.tail, graph - turn.location)
+    new Game(players.tail :+ players.head.swap(turn.card, deck.head), deck.tail, dungeon - turn.location)
   }
 
   def +(turn: Pass): Game = {
-    new Game(players.tail :+ players.head.swap(turn.card, deck.head), deck.tail, graph)
+    new Game(players.tail :+ players.head.swap(turn.card, deck.head), deck.tail, dungeon)
   }
 
+  def endOfGame() = dungeon.goldFound() || deck.isEmpty
 
 }
 

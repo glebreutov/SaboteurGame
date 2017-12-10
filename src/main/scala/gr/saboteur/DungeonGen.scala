@@ -60,6 +60,8 @@ object DungeonGen extends App{
       return "╚"
     }else if(c.top){
       return "╨"
+    }else if(c.right){
+      return "╕"
     }
     throw new RuntimeException("No match")
   }

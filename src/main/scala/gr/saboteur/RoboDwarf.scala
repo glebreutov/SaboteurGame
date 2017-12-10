@@ -41,7 +41,7 @@ object RoboDwarf {
   }
 
   def randomTurn(game: Game): PlayersTurn = {
-    Random.shuffle(everyTurn(game)).head
+    if(game.players.head.hand.isEmpty)PlayersTurn(null) else Random.shuffle(everyTurn(game)).head
   }
 
 }

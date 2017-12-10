@@ -17,7 +17,7 @@ object SABOTEUR extends Role
 case class Player (id: String, role: Role, hand: Set[Card], spells: Set[SpellCard] = Set()){
 
   def swap(remove: Card, add: Card): Player = {
-    val newHand = hand - remove + add
+    val newHand = if(add != null) hand - remove + add else hand - remove
     Player(id, role, newHand, spells)
   }
 
@@ -150,7 +150,7 @@ class Game (val players: List[Player], val deck: List[Card], val dungeon: Dungeo
     new Game(players.tail :+ players.head.swap(turn.card, playersCard), deckLeft, dungeon, turns :+ turn)
   }
 
-  def endOfGame() = dungeon.goldFound() || (deck.isEmpty && players.forall(p => p.hand.isEmpty))
+  def endOfGame: Boolean = dungeon.goldFound() || (deck.isEmpty && players.forall(p => p.hand.isEmpty))
 
 }
 

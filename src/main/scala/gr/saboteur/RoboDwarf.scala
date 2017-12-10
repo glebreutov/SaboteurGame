@@ -36,8 +36,8 @@ object RoboDwarf {
   def everyTurn(game: Game): List[PlayersTurn] = {
     val hand = game.players.head.hand
 //    val tunnels = mapTurns(hand, game.graph)
-//mapSpells(hand, game.players) :::
-    mapTurns(game) ::: mapReveal(hand) ::: List(PlayersTurn(hand.head))
+//
+    (mapSpells(hand, game.players) take 1) :::mapTurns(game) ::: mapReveal(hand) ::: List(PlayersTurn(hand.head))
   }
 
   def randomTurn(game: Game): PlayersTurn = {

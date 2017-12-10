@@ -110,7 +110,9 @@ class Game (val players: List[Player], val deck: List[Card], val dungeon: Dungeo
     if(upadtedGraph == dungeon)
       throw new GameException("Card doesn't fit")
 
-    new Game(players.tail :+ players.head.swap(turn.card, deck.head), deck.tail, upadtedGraph, turns :+ turn)
+    val playersCard = if(deck.nonEmpty) deck.head else null
+    val deckLeft = if (deck.nonEmpty) deck.tail else List()
+    new Game(players.tail :+ players.head.swap(turn.card, playersCard), deckLeft, upadtedGraph, turns :+ turn)
   }
 
   def castSpell(turn: PlayersTurn): Game = {
@@ -123,22 +125,29 @@ class Game (val players: List[Player], val deck: List[Card], val dungeon: Dungeo
 
     val updatedPlayers = for(player <- players.tail :+ players.head)
       yield if(player == turn.victim) victim else player
-
-    new Game(updatedPlayers.tail :+ updatedPlayers.head.swap(turn.card, deck.head), deck.tail, dungeon, turns :+ turn)
+    val playersCard = if(deck.nonEmpty) deck.head else null
+    val deckLeft = if (deck.nonEmpty) deck.tail else List()
+    new Game(updatedPlayers.tail :+ updatedPlayers.head.swap(turn.card, playersCard), deckLeft, dungeon, turns :+ turn)
   }
 
   def reval(turn: PlayersTurn): Game = {
     checkCardPresence(turn.card)
-    new Game(players.tail :+ players.head.swap(turn.card, deck.head), deck.tail, dungeon, turns :+ turn)
+    val playersCard = if(deck.nonEmpty) deck.head else null
+    val deckLeft = if (deck.nonEmpty) deck.tail else List()
+    new Game(players.tail :+ players.head.swap(turn.card, playersCard), deckLeft, dungeon, turns :+ turn)
   }
 
   def destroy(turn: PlayersTurn): Game = {
     checkCardPresence(turn.card)
-    new Game(players.tail :+ players.head.swap(turn.card, deck.head), deck.tail, dungeon - turn.location, turns :+ turn)
+    val playersCard = if(deck.nonEmpty) deck.head else null
+    val deckLeft = if (deck.nonEmpty) deck.tail else List()
+    new Game(players.tail :+ players.head.swap(turn.card, playersCard), deckLeft, dungeon - turn.location, turns :+ turn)
   }
 
   def pass(turn: PlayersTurn): Game = {
-    new Game(players.tail :+ players.head.swap(turn.card, deck.head), deck.tail, dungeon, turns :+ turn)
+    val playersCard = if(deck.nonEmpty) deck.head else null
+    val deckLeft = if (deck.nonEmpty) deck.tail else List()
+    new Game(players.tail :+ players.head.swap(turn.card, playersCard), deckLeft, dungeon, turns :+ turn)
   }
 
   def endOfGame() = dungeon.goldFound() || (deck.isEmpty && players.forall(p => p.hand.isEmpty))

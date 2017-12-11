@@ -14,7 +14,7 @@ object DwarfName extends Enumeration {
 class Role
 object DWARF extends Role
 object SABOTEUR extends Role
-case class Player (id: String, role: Role, hand: Set[Card], spells: Set[SpellCard] = Set()){
+case class Player (id: String, role: Role, hand: Hand, spells: Spells = Set()){
 
   def swap(remove: Card, add: Card): Player = {
     val newHand = if(add != null) hand - remove + add else hand - remove
@@ -81,7 +81,7 @@ object Game {
   }
 
 }
-class Game (val players: List[Player], val deck: List[Card], val dungeon: DungeonGraph, val turns: List[PlayersTurn]){
+class Game (val players: Players, val deck: Cards, val dungeon: DungeonGraph, val turns: Turns){
 
   def checkCardPresence(card: Card): Unit ={
     if(!players.head.hand.contains(card)){
@@ -150,7 +150,7 @@ class Game (val players: List[Player], val deck: List[Card], val dungeon: Dungeo
     new Game(players.tail :+ players.head.swap(turn.card, playersCard), deckLeft, dungeon, turns :+ turn)
   }
 
-  def endOfGame: Boolean = dungeon.goldFound() || (deck.isEmpty && players.forall(p => p.hand.isEmpty))
+  def endOfGame(): Boolean = dungeon.goldFound() || (deck.isEmpty && players.forall(p => p.hand.isEmpty))
 
 }
 

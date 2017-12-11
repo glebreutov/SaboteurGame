@@ -61,7 +61,7 @@ class DungeonGraph (val graph: Map[Dot, MapCard]){
   }
 
   def goldFound(coord : Dot=Dot(0, 0), g: Map[Dot, Card]=graph.toMap): Boolean = {
-    if(graph.isEmpty){
+    if(graph.isEmpty || g(coord).isInstanceOf[DEADEND]){
       return false
     }
     else if(g(coord).isInstanceOf[GOLD]){

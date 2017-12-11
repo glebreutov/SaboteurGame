@@ -36,6 +36,9 @@ object DungeonGen extends App{
   printMap(graph.graph)
 
   def cardToString(c: MapCard): String ={
+    if(c.isInstanceOf[DEADEND]){
+      return "╳"
+    }
     if(c.top && c.bottom && c.left && c.right){
       return "╬"
     }else if (c.top && c.bottom && c.left){

@@ -6,8 +6,8 @@ import gr.saboteur.DungeonGraph.TREASURES_POINTS
 import scala.util.Random
 
 object RoboDwarf {
-  //def mapOuts(graph: DungeonGraph) := List[]
-  def mapTurns(game: Game): List[PlayersTurn] = {
+
+  def mapTurns(game: Game): Turns = {
     val player = game.players.head
     val hand = player.hand
     val graph = game.dungeon
@@ -18,22 +18,22 @@ object RoboDwarf {
       .filter(t => graph.fit(t._1, t._2)).map(t => PlayersTurn(t._2, t._1))
   }
 
-  def mapSpells(hand: Set[Card], players: List[Player]): List[PlayersTurn] = {
+  def mapSpells(hand: Hand, players: Players): Turns = {
     hand.filter(c => c.isInstanceOf[SpellCard]).map(c => c.asInstanceOf[SpellCard])
       .flatMap(c=> players.filter(p => p != p.spell(c)).map(p=> PlayersTurn(c, victim = p))).toList
   }
 
-  def mapReveal(hand: Set[Card]): List[PlayersTurn] = {
+  def mapReveal(hand: Hand): Turns = {
     hand.filter(c => c.isInstanceOf[REVEAL]).map(c=> c.asInstanceOf[REVEAL])
       .flatMap(c => TREASURES_POINTS.map(p => PlayersTurn(c, p))).toList
   }
 
-  def boomReveal(hand: Set[Card], graph: DungeonGraph): List[PlayersTurn] = {
+  def boomReveal(hand: Hand, graph: DungeonGraph): Turns = {
     hand.filter(c => c.isInstanceOf[BOOM]).map(c => c.asInstanceOf[BOOM])
       .flatMap(c=> graph.graph.keySet.map(p => PlayersTurn(c, p))).toList
   }
 
-  def everyTurn(game: Game): List[PlayersTurn] = {
+  def everyTurn(game: Game): Turns = {
     val hand = game.players.head.hand
 //    val tunnels = mapTurns(hand, game.graph)
 //

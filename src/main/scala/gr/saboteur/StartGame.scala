@@ -6,7 +6,7 @@ object StartGame extends App {
   println("Game started")
   var i = 0
   while (!game.endOfGame()){
-    DungeonGen.printMap(game.dungeon.graph)
+
     val player = game.players.head
     println("It's", player.id, " turn now, tunr num:", i, "cards in deck", game.deck.length, "players count", game.players.length)
     println("player spells", player.spells)
@@ -16,18 +16,13 @@ object StartGame extends App {
     val turn = RoboDwarf.randomTurn(game)
     println(turn)
     game += turn
+    DungeonGen.printMap(game.dungeon.graph)
     i+=1
     //game = game + turn
     //println(str)
   }
 
   println("END OF THE GAME!, GOLD:", game.dungeon.goldFound())
-  def parseTurn(s: String): PlayersTurn = {
-    //card num + action + (pos | player id)
-    //1 tunnel (1, 0)
-    //3 spell Dwalli
-    //6 pass
-    throw new RuntimeException("Implement me")
-  }
+  println(game.dungeon.graph)
 
 }

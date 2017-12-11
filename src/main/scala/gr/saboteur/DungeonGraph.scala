@@ -61,21 +61,12 @@ class DungeonGraph (val graph: Map[Dot, MapCard]){
   }
 
   def goldFound(coord : Dot=Dot(0, 0), g: Map[Dot, Card]=graph.toMap): Boolean = {
-    if(graph.isEmpty || g(coord).isInstanceOf[DEADEND]){
-      return false
+      g(coord) match {
+      case _: DEADEND => false
+      case _: GOLD => true
+      case _ if g.nonEmpty => neighbors(coord, g).values.map(dot => goldFound(dot, g - coord)).exists(res => res)
+      case _ => false
     }
-    else if(g(coord).isInstanceOf[GOLD]){
-      return true
-    }else{
-      val sibleings = neighbors(coord, g)
-      val graphTail = g - coord
-      for((_, v) <- sibleings){
-        if(goldFound(v, graphTail)){
-          return true
-        }
-      }
-    }
-    false
   }
 
 

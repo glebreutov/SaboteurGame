@@ -61,7 +61,7 @@ class DungeonGraph (val graph: Map[Dot, MapCard]){
   }
 
   def goldFound(coord : Dot=Dot(0, 0), g: Map[Dot, Card]=graph.toMap): Boolean = {
-      g(coord) match {
+    g(coord) match {
       case _: DEADEND => false
       case _: GOLD => true
       case _ if g.nonEmpty => neighbors(coord, g).values.map(dot => goldFound(dot, g - coord)).exists(res => res)

@@ -35,38 +35,29 @@ object DungeonGen extends App{
   }
   printMap(graph.graph)
 
-  def cardToString(c: MapCard): String ={
-    if(c.isInstanceOf[DEADEND]){
-      return "╳"
+  def nicePrinter(c: MapCard): String ={
+    c match {
+        case DUNGEON(Top, Bottom) => "║"
+        case DUNGEON(Top, Bottom, Left, Right) => "╬"
+        case ORE(Top, Bottom, Left, Right) => "╬"
+        case GOLD(Top, Bottom, Left, Right) => "╬"
+        case DUNGEON(Top, Bottom, Right) => "╠"
+        case DUNGEON(Bottom, Left) => "╗"
+        case DUNGEON(Bottom, Left, Right) => "╦"
+        case START(Bottom) => "╦"
+        case DUNGEON(Bottom, Right) => "╔"
+        case DUNGEON(Left, Right) => "═"
+        case DEADEND(Top, Bottom) => "│"
+        case DEADEND(Top, Bottom, Left, Right) => "┼"
+        case DEADEND(Top, Bottom, Right) => "├"
+        case DEADEND(Left, Bottom) => "┐"
+        case DEADEND(Bottom, Left, Right) => "├"
+        case DEADEND(Right, Bottom) => "┌"
+        case DEADEND(Bottom) => "╥"
+        case DEADEND(Left, Right) => "─"
+        case DEADEND(Right) => "╘"
+        case _ => "*"
     }
-    if(c.top && c.bottom && c.left && c.right){
-      return "╬"
-    }else if (c.top && c.bottom && c.left){
-      return "╣"
-    }else if(c.top && c.bottom && c.right){
-      return "╠"
-    }
-    else if(c.bottom && !c.top && !c.right && !c.left){
-      return "╥"
-    }
-    if(c.right && c.left){
-      return "═"
-    }else if(c.top && c.bottom && !c.left && !c.right){
-      return "║"
-    }else if(c.left && c.bottom){
-      return "╗"
-    }else if(c.right && c.bottom){
-      return "╔"
-    }else if(c.left && c.top){
-      return "╝"
-    }else if(c.right && c.top){
-      return "╚"
-    }else if(c.top){
-      return "╨"
-    }else if(c.right){
-      return "╕"
-    }
-    throw new RuntimeException("No match")
   }
 
   def printMap(graph: Map[Dot, MapCard]) {
@@ -79,7 +70,7 @@ object DungeonGen extends App{
       for (j <- minVal to maxVal){
         val tuples = list.filter(q => q._1 == j)
         if(tuples.nonEmpty){
-          print(cardToString(tuples.head._2))
+          print(nicePrinter(tuples.head._2))
         }else {
           print(" ")
         }

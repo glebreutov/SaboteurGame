@@ -48,6 +48,7 @@ abstract class MapCard(val ways: Map[Direction, Boolean]) extends Card {
   def fit(side: Direction, oth: MapCard): Boolean ={
     ways(side) == oth.ways(Direction.opposite(side))
   }
+
 }
 
 case class UpsideDownCard(card: Card) extends MapCard{
@@ -82,7 +83,6 @@ class BOOM extends SpecialCard
 object Cards {
   def deck: List[Card] = {
     var deck: List[Card] = DUNGEON(Top, Bottom) * 3
-    deck :::= DUNGEON(Top, Bottom, Left, Right) * 5
     deck :::= DUNGEON(Top, Bottom, Left, Right) * 5
     deck :::= DUNGEON(Top, Bottom, Right) * 5
     deck :::= DUNGEON(Bottom, Left) * 4

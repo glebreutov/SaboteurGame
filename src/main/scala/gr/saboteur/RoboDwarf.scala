@@ -11,10 +11,13 @@ object RoboDwarf {
     val player = game.players.head
     val hand = player.hand
     val graph = game.dungeon
-    val cards = hand.filter(c => player.spells.isEmpty && c.isInstanceOf[MapCard]).map(c => c.asInstanceOf[MapCard])
 
+    val cards = hand.filter(c => player.spells.isEmpty && c.isInstanceOf[MapCard])
+      .map(c => c.asInstanceOf[MapCard]).toList
+//    val cardsUpAndDown = cards ++ cards.map(c => Cards.upsideDown(c))
+    val cardsUpAndDown = cards
     val outs = graph.graph.keys.toList
-    outs.flatMap(o => nearDots(o)).flatMap(o => cards.map(c => (o, c)))
+    outs.flatMap(o => nearDots(o)).flatMap(o => cardsUpAndDown.map(c => (o, c)))
       .filter(t => graph.fit(t._1, t._2)).map(t => PlayersTurn(t._2, t._1))
   }
 

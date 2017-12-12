@@ -38,9 +38,9 @@ object DungeonGen extends App{
   def nicePrinter(c: MapCard): String ={
     c match {
         case DUNGEON(Top, Bottom) => "║"
-        case DUNGEON(Top, Bottom, Left, Right) => "╬"
         case ORE(Top, Bottom, Left, Right) => "╬"
         case GOLD(Top, Bottom, Left, Right) => "╬"
+        case DUNGEON(Top, Bottom, Left, Right) => "╬"
         case DUNGEON(Top, Bottom, Right) => "╠"
         case DUNGEON(Bottom, Left) => "╗"
         case DUNGEON(Bottom, Left, Right) => "╦"
@@ -64,13 +64,14 @@ object DungeonGen extends App{
 
     val minVal = graph.map(v => v._1.col).min
     val maxVal = graph.map(v => v._1.col).max
+    case class ColAndCard(col: Int, card: MapCard)
     for (i <- 0 to DungeonGraph.GRAPH_HEIGHT){
-      val list = graph.filter(p => p._1.row == i).map(p => (p._1.col, p._2)).toList
+      val list = graph.filter(p => p._1.row == i).map(p => ColAndCard(p._1.col, p._2)).toList
 
       for (j <- minVal to maxVal){
-        val tuples = list.filter(q => q._1 == j)
+        val tuples = list.filter(q => q.col == j)
         if(tuples.nonEmpty){
-          print(nicePrinter(tuples.head._2))
+          print(nicePrinter(tuples.head.card))
         }else {
           print(" ")
         }

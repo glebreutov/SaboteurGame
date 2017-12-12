@@ -1,6 +1,7 @@
 package gr.saboteur
 
 import gr.saboteur.DungeonGraph.Dot
+import gr.saboteur.rest.HelloWorld.PlayerID
 
 import scala.util.Random
 
@@ -66,6 +67,18 @@ case class PlayersTurn(card: Card, location: Dot = null, victim: Player = null, 
 
 
 object Game {
+  def start(plist: List[PlayerID]): Game = {
+    var deck  = Cards.deal()
+    val saboteur = Random.nextInt(plist.size)
+    val players = for (i <- 0 to plist.size) yield {
+      val hand = (deck take 6).toSet
+      deck = deck drop 6
+      if (i == saboteur) Player(plist(i), SABOTEUR, hand) else Player(plist(i), DWARF, hand)
+    }
+
+    new Game(players.toList, deck, DungeonGraph.init(0), Nil)
+  }
+
 
   def start(playersCount: Int): Game = {
 
@@ -82,9 +95,17 @@ object Game {
 
 }
 class Game (val players: Players, val deck: Cards, val dungeon: DungeonGraph, val turns: Turns){
+  def goldFound(): Boolean = dungeon.goldFound()
+
 
   def checkCardPresence(card: Card): Unit ={
-    if(!players.head.hand.contains(card)){
+    val hand = players.head.hand
+    val contains = card match {
+      case mc: MapCard => hand.contains(mc) || hand.contains(Cards.upsideDown(mc))
+      case _ => hand.contains(card)
+    }
+
+    if(!contains){
       throw new GameException("Player doesn't have this card")
     }
   }

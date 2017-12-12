@@ -29,32 +29,31 @@ abstract class Card extends Cloneable {
     cards.toList
   }
 
-  override def toString = this.getClass.getSimpleName
+  override def toString: String = this.getClass.getSimpleName
 }
-abstract class MapCard(val ways: Map[Direction, Boolean]) extends Card {
+abstract class MapCard(tunnels: Direction *) extends Card {
+  val top: Boolean = tunnels.contains(Top)
+  val bottom: Boolean = tunnels.contains(Bottom)
+  val left: Boolean = tunnels.contains(Left)
+  val right: Boolean = tunnels.contains(Right)
 
-  def this(tunnels: Direction *){
-    this(Direction.directions.map(d => (d, tunnels.contains(d))).toMap)
+  def way(direction: Direction): Boolean = {
+    direction match {
+      case Top => top
+      case Bottom => bottom
+      case Left => left
+      case Right => right
+    }
   }
-  def top: Boolean = ways(Top)
-  def bottom: Boolean = ways(Bottom)
-  def left: Boolean = ways(Left)
-  def right: Boolean = ways(Right)
-
   def connect(side: Direction, other: MapCard): Boolean ={
-    ways(side) && fit(side, other)
+    way(side) && fit(side, other)
   }
 
   def fit(side: Direction, oth: MapCard): Boolean ={
-    ways(side) == oth.ways(Direction.opposite(side))
+    way(side) == oth.way(Direction.opposite(side))
   }
 
 }
-
-case class UpsideDownCard(card: Card) extends MapCard{
-  throw new RuntimeException("Implement me")
-}
-
 
 case class DUNGEON(tunnels: Direction *) extends MapCard(tunnels : _*)
 case class DEADEND(tunnels: Direction *) extends MapCard(tunnels : _*)
@@ -81,6 +80,22 @@ class BOOM extends SpecialCard
 
 
 object Cards {
+
+  def upsideDown(card: MapCard): MapCard = {
+    def mirrorParams(card: MapCard): List[Direction] = {
+      var list:List[Direction] = List()
+      if(!card.top)  list :+= Top
+      if(!card.bottom)  list :+= Bottom
+      if(!card.right)  list :+= Right
+      if(!card.left)  list :+= Left
+      list
+    }
+    card match {
+      case _: DUNGEON => DUNGEON(mirrorParams(card) :_*)
+      case _: DEADEND => DEADEND(mirrorParams(card) :_*)
+    }
+  }
+
   def deck: List[Card] = {
     var deck: List[Card] = DUNGEON(Top, Bottom) * 3
     deck :::= DUNGEON(Top, Bottom, Left, Right) * 5

@@ -14,7 +14,7 @@ object DungeonGraph {
 
   def init(goldPos: Int): DungeonGraph = {
     def card(pos: Int): MapCard = {
-      if (pos == goldPos) GOLD(Top, Left, Right, Bottom) else ORE(Top, Left, Right, Bottom)
+      if (pos == goldPos) GOLD(Top, Bottom, Left, Right) else ORE(Top, Bottom, Left, Right)
 
     }
 

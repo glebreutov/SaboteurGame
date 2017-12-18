@@ -99,7 +99,7 @@ object HelloWorld {
 
   def makeTurn(sessionId: SessionId, playerID: PlayerID, turn: PlayersTurn): Json = {
     lazy val game = games(sessionId)
-    lazy val updated = game + turn
+    lazy val (updated, message) = game makeTurn turn
     if(!games.contains(sessionId))
       responseErr("Invalid session id")
     else if(!lobby.contains(playerID))

@@ -15,7 +15,13 @@ object StartGame extends App {
     //val turn = if(i % 3== 0) parseTurn(scala.io.StdIn.readLine()) else
     val turn = RoboDwarf.randomTurn(game)
     println(turn)
-    game += turn
+    val (ngame, message) = game makeTurn turn
+    game = ngame
+    if(message != "Ok"){
+      println(message)
+      System.exit(-1)
+    }
+
     DungeonGen.printMap(game.dungeon.graph)
     i+=1
     //game = game + turn

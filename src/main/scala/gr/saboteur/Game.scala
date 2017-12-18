@@ -105,19 +105,16 @@ class Game (val players: Players, val deck: Cards, val dungeon: DungeonGraph, va
   def goldFound(): Boolean = dungeon.goldFound()
 
 
-  def checkCardPresence(card: Card): Unit ={
+  def checkCardPresence(card: Card): Boolean ={
     val hand = players.head.hand
     val contains = card match {
       case mc: MapCard => hand.contains(mc) || hand.contains(Cards.upsideDown(mc))
       case _ => hand.contains(card)
     }
-
-    if(!contains){
-      throw new GameException("Player doesn't have this card")
-    }
+    !contains
   }
 
-  def +(turn: PlayersTurn): Game = {
+  def makeTurn(turn: PlayersTurn): (Game, String) = {
     turn.action() match {
       case _: MakeTunnel.type => tunnel(turn)
       case _: CastSpell.type  => castSpell(turn)
@@ -128,25 +125,25 @@ class Game (val players: Players, val deck: Cards, val dungeon: DungeonGraph, va
     }
   }
 
-  def tunnel(turn: PlayersTurn): Game = {
+  def tunnel(turn: PlayersTurn): (Game, String) = {
     val current = players.head
-    checkCardPresence(turn.card)
-    if(current.spells.nonEmpty){
-      throw new GameException("Player has spells on him, so can't build")
-    }
+
+    if(current.spells.nonEmpty)
+      return (this, "Player has spells on him, so can't build")
+
     val upadtedGraph = dungeon + (turn.location -> turn.card.asInstanceOf[MapCard])
     if(upadtedGraph == dungeon)
-      throw new GameException("Card doesn't fit")
+      return (this, "Card doesn't fit")
 
     endOfTurn(turn, newdungeon = upadtedGraph)
   }
 
-  def castSpell(turn: PlayersTurn): Game = {
-    checkCardPresence(turn.card)
+  def castSpell(turn: PlayersTurn): (Game, String) = {
+
 
     val victim = turn.victim.spell(turn.card.asInstanceOf[SpellCard])
     if(victim == turn.victim){
-      throw new GameException("Can't cast more this card")
+      return (this, "Can't cast more this card")
     }
 
     val updatedPlayers = for(player <- players.tail :+ players.head)
@@ -155,29 +152,39 @@ class Game (val players: Players, val deck: Cards, val dungeon: DungeonGraph, va
     endOfTurn(turn, newplayers = updatedPlayers)
   }
 
-  def reval(turn: PlayersTurn): Game = {
-    checkCardPresence(turn.card)
+  def reval(turn: PlayersTurn): (Game, String) = {
     val player = players.head.reveal(turn.location)
     endOfTurn(turn, player :: players.tail)
     //val fx: _ => Player = {player}
   }
 
-  def endOfTurn(turn: PlayersTurn, newplayers: Players = players, newdungeon: DungeonGraph = dungeon): Game = {
+  def endOfTurn(turn: PlayersTurn, newplayers: Players = players, newdungeon: DungeonGraph = dungeon): (Game, String) = {
+    if(checkCardPresence(turn.card))
+      return (this, "Player does not have this card")
+
     val player = newplayers.head
       .remove(turn.card)
       .add(deck take 1)
     if (newplayers.lengthCompare(players.size) != 0){
-      throw new GameException("Count of players can't be changed during game")
+      throw new GameException("players count can't be changed during game")
     }
-    new Game(newplayers.tail :+ player, deck drop 1, newdungeon, turns :+ turn)
+
+    def skipEmptyHands(plist: Players): Players = {
+      if(plist.forall(_.hand.isEmpty) || plist.head.hand.nonEmpty){
+        plist
+      } else {
+        skipEmptyHands(plist.tail :+ plist.head)
+      }
+    }
+    val game = new Game(skipEmptyHands(newplayers.tail :+ player), deck drop 1, newdungeon, turns :+ turn)
+    (game, "Ok")
   }
 
-  def destroy(turn: PlayersTurn): Game = {
-    checkCardPresence(turn.card)
+  def destroy(turn: PlayersTurn): (Game, String) = {
     endOfTurn(turn, newdungeon = dungeon - turn.location)
   }
 
-  def pass(turn: PlayersTurn): Game = {
+  def pass(turn: PlayersTurn): (Game, String) = {
     endOfTurn(turn)
   }
 

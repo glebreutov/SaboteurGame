@@ -39,15 +39,18 @@ gives full information about game state to player
 ``` 
 
 ### make turn - pass
+**url:** /pass-turn/sessionId/playerID/cardId
+
 allows player to pass turn
-** url: ** /pass-turn/sessionId/playerID/cardId
 
 ### make turn - victim
+**url:** /victim-turn/sessionId/playerID/cardId/otherPlayerId
+
 allows player to cast a spell to other player
-** url: ** /victim-turn/sessionId/playerID/cardId/otherPlayerId
 
 ### make turn - map
+**url:** /map-turn/sessionId/playerID/cardId/location
+
 allows player to make map related turn
-** url: ** /map-turn/sessionId/playerID/cardId/location
 
 location is pair of digits divided by @. for example 1@-3

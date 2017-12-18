@@ -29,15 +29,15 @@ case class Player (id: String, role: Role, hand: Hand, spells: Spells = Set(), r
     Player(id, role, hand - remove, spells, revelations)
   }
 
-  def spell(spell: SpellCard): Player = {
-    val newSpells = spell match {
-      case _ : Curse => spells + spell
-      case _ : FIX_LANTERN => spells.filter(d => !d.isInstanceOf[BRAKE_LANTERN])
-      case _ : FIX_TRUCK => spells.filter(d => !d.isInstanceOf[BRAKE_PICK])
-      case _ : FIX_PICK => spells.filter(d => !d.isInstanceOf[BRAKE_PICK])
-      case _ : FIX_LANTERN_PICK=> spells.filter(d => !d.isInstanceOf[BRAKE_LANTERN] || !d.isInstanceOf[BRAKE_PICK])
-      case _ : FIX_LANTERN_TRUCK=> spells.filter(d => !d.isInstanceOf[BRAKE_LANTERN] || !d.isInstanceOf[BRAKE_TRUCK])
-      case _ : FIX_PICK_TRUCK=> spells.filter(d => !d.isInstanceOf[BRAKE_PICK] || !d.isInstanceOf[BRAKE_TRUCK])
+  def spell(spell: Card): Player = {
+    val newSpells = spell.cardType match {
+      case FIX_LANTERN => spells.filter(_.cardType != BRAKE_LANTERN)
+      case FIX_TRUCK => spells.filter(_.cardType != BRAKE_TRUCK)
+      case FIX_PICK => spells.filter(_.cardType != BRAKE_PICK)
+      case FIX_LANTERN_PICK=> spells.filter(_.cardType == BRAKE_TRUCK)
+      case FIX_LANTERN_TRUCK=> spells.filter(_.cardType == BRAKE_PICK)
+      case FIX_PICK_TRUCK=> spells.filter(_.cardType == BRAKE_LANTERN)
+      case _  => spells + spell
     }
     if(spells.size > 2) this else Player(id, role, hand, newSpells, revelations)
   }
@@ -54,11 +54,11 @@ case object RevealTreasure extends TurnType
 
 case class PlayersTurn(card: Card, location: Dot = null, victim: Player = null, upsideDown: Boolean = false){
   def action(): TurnType = {
-    card match {
-      case _: MapCard if location != null => MakeTunnel
-      case _: SpellCard if victim != null => CastSpell
-      case _: REVEAL if location != null => RevealTreasure
-      case _: BOOM if location != null => DestroyTunnel
+    card.cardType match {
+      case DUNGEON | DEADEND if location != null => MakeTunnel
+      case REVEAL if location != null => RevealTreasure
+      case BOOM if location != null => DestroyTunnel
+      case _ if victim != null => CastSpell
       case _ => Pass
     }
   }
@@ -84,7 +84,8 @@ object Game {
       Player(plist(i), role, hand)
     }
 
-    new Game(players.toList, deck, DungeonGraph.init(0), Nil)
+    val treasurepos = Random.shuffle(List(0, -2, 2)).head
+    new Game(players.toList, deck, DungeonGraph.init(treasurepos), Nil)
   }
 
   def cardsPerHand = 6
@@ -103,7 +104,7 @@ class Game (val players: Players, val deck: Cards, val dungeon: DungeonGraph, va
   def checkCardPresence(card: Card): Boolean ={
     val hand = players.head.hand
     val contains = card match {
-      case mc: MapCard => hand.contains(mc) || hand.contains(Cards.upsideDown(mc))
+      case mc: DungeonCard => hand.contains(mc) || hand.contains(Cards.upsideDown(mc))
       case _ => hand.contains(card)
     }
     !contains
@@ -126,7 +127,7 @@ class Game (val players: Players, val deck: Cards, val dungeon: DungeonGraph, va
     if(current.spells.nonEmpty)
       return (this, "Player has spells on him, so can't build")
 
-    val upadtedGraph = dungeon + (turn.location -> turn.card.asInstanceOf[MapCard])
+    val upadtedGraph = dungeon + (turn.location -> turn.card.asInstanceOf[DungeonCard])
     if(upadtedGraph == dungeon)
       return (this, "Card doesn't fit")
 
@@ -136,7 +137,7 @@ class Game (val players: Players, val deck: Cards, val dungeon: DungeonGraph, va
   def castSpell(turn: PlayersTurn): (Game, String) = {
 
 
-    val victim = turn.victim.spell(turn.card.asInstanceOf[SpellCard])
+    val victim = turn.victim.spell(turn.card)
     if(victim == turn.victim){
       return (this, "Can't cast more this card")
     }

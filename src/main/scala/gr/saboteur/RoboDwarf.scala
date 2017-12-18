@@ -12,8 +12,8 @@ object RoboDwarf {
     val hand = player.hand
     val graph = game.dungeon
 
-    val cards = hand.filter(c => player.spells.isEmpty && c.isInstanceOf[MapCard])
-      .map(c => c.asInstanceOf[MapCard]).toList
+    val cards = hand.filter(c => player.spells.isEmpty && c.isInstanceOf[DungeonCard])
+      .map(c => c.asInstanceOf[DungeonCard]).toList
 //    val cardsUpAndDown = cards ++ cards.map(c => Cards.upsideDown(c))
     val cardsUpAndDown = cards
     val outs = graph.graph.keys.toList
@@ -22,17 +22,17 @@ object RoboDwarf {
   }
 
   def mapSpells(hand: Hand, players: Players): Turns = {
-    hand.filter(c => c.isInstanceOf[SpellCard]).map(c => c.asInstanceOf[SpellCard])
+    hand.filter(_.cardType.isInstanceOf[SpellCard])
       .flatMap(c=> players.filter(p => p != p.spell(c)).map(p=> PlayersTurn(c, victim = p))).toList
   }
 
   def mapReveal(hand: Hand): Turns = {
-    hand.filter(c => c.isInstanceOf[REVEAL]).map(c=> c.asInstanceOf[REVEAL])
+    hand.filter(_.cardType == REVEAL)
       .flatMap(c => TREASURES_POINTS.map(p => PlayersTurn(c, p))).toList
   }
 
   def boomReveal(hand: Hand, graph: DungeonGraph): Turns = {
-    hand.filter(c => c.isInstanceOf[BOOM]).map(c => c.asInstanceOf[BOOM])
+    hand.filter(_.cardType == BOOM)
       .flatMap(c=> graph.graph.keySet.map(p => PlayersTurn(c, p))).toList
   }
 

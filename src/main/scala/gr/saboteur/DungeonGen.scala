@@ -12,7 +12,7 @@ object DungeonGen extends App{
       )
   }
   var graph: DungeonGraph = DungeonGraph.init(0)
-  var cards: List[MapCard] = Cards.deal().filter(c => c.isInstanceOf[DUNGEON]).map(_.asInstanceOf[DUNGEON])
+  var cards: List[DungeonCard] = Cards.deal().filter(c => c.cardType == DUNGEON).map(_.asInstanceOf[DungeonCard])
   val TREASURES_LOC = DungeonGraph.TREASURE_DOTS.map(x => (DungeonGraph.GRAPH_HEIGHT, x))
   while (cards.nonEmpty){
     val MapCard = cards.head
@@ -35,33 +35,33 @@ object DungeonGen extends App{
   }
   printMap(graph.graph)
 
-  def nicePrinter(c: MapCard): String ={
+  def nicePrinter(c: DungeonCard): String ={
     c match {
-        case DUNGEON(Top, Bottom) => "║"
-        case ORE(Top, Bottom, Left, Right) | GOLD(Top, Bottom, Left, Right) | DUNGEON(Top, Bottom, Left, Right) => "╬"
-        case DUNGEON(Top, Bottom, Right) => "╠"
-        case DUNGEON(Bottom, Left) => "╗"
-        case START(Bottom) | DUNGEON(Bottom, Left, Right) => "╦"
-        case DUNGEON(Bottom, Right) => "╔"
-        case DUNGEON(Left, Right) => "═"
-        case DEADEND(Top, Bottom) => "│"
-        case DEADEND(Top, Bottom, Left, Right) => "┼"
-        case DEADEND(Top, Bottom, Right) => "├"
-        case DEADEND(Left, Bottom) => "┐"
-        case DEADEND(Bottom, Left, Right) => "┬"
-        case DEADEND(Right, Bottom) => "┌"
-        case DEADEND(Bottom) => "╥"
-        case DEADEND(Left, Right) => "─"
-        case DEADEND(Right) => "╘"
+        case DungeonCard(DUNGEON, Top, Bottom) => "║"
+        case Cards.ORE_CARD | DungeonCard(DUNGEON, Top, Bottom, Left, Right) => "╬"
+        case DungeonCard(DUNGEON, Top, Bottom, Right) => "╠"
+        case DungeonCard(DUNGEON, Bottom, Left) => "╗"
+        case Cards.START_CARD | DungeonCard(DUNGEON, Bottom, Left, Right) => "╦"
+        case DungeonCard(DUNGEON, Bottom, Right) => "╔"
+        case DungeonCard(DUNGEON, Left, Right) => "═"
+        case DungeonCard(DEADEND, Top, Bottom) => "│"
+        case DungeonCard(DEADEND, Top, Bottom, Left, Right) => "┼"
+        case DungeonCard(DEADEND,Top, Bottom, Right) => "├"
+        case DungeonCard(DEADEND,Left, Bottom) => "┐"
+        case DungeonCard(DEADEND,Bottom, Left, Right) => "┬"
+        case DungeonCard(DEADEND,Right, Bottom) => "┌"
+        case DungeonCard(DEADEND,Bottom) => "╥"
+        case DungeonCard(DEADEND,Left, Right) => "─"
+        case DungeonCard(DEADEND,Right) => "╘"
         case _ => "*"
     }
   }
 
-  def printMap(graph: Map[Dot, MapCard]) {
+  def printMap(graph: Map[Dot, DungeonCard]) {
 
     val minVal = graph.map(v => v._1.col).min
     val maxVal = graph.map(v => v._1.col).max
-    case class ColAndCard(col: Int, card: MapCard)
+    case class ColAndCard(col: Int, card: DungeonCard)
     for (i <- 0 to DungeonGraph.GRAPH_HEIGHT){
       val list = graph.filter(p => p._1.row == i).map(p => ColAndCard(p._1.col, p._2)).toList
 

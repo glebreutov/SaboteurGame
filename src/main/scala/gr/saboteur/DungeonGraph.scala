@@ -13,8 +13,8 @@ object DungeonGraph {
   }
 
   def init(goldPos: Int): DungeonGraph = {
-    def card(pos: Int): MapCard = {
-      if (pos == goldPos) GOLD(Top, Bottom, Left, Right) else ORE(Top, Bottom, Left, Right)
+    def card(pos: Int): DungeonCard = {
+      if (pos == goldPos) Cards.GOLD_CARD else Cards.ORE_CARD
 
     }
 
@@ -24,23 +24,23 @@ object DungeonGraph {
     val tresures = TREASURES_POINTS
         .map(l => l -> card(l.col)).toMap
 
-    new DungeonGraph(tresures + (Dot(0, 0) -> START(Bottom)))
+    new DungeonGraph(tresures + (Dot(0, 0) -> Cards.START_CARD))
   }
 }
-class DungeonGraph (val graph: Map[Dot, MapCard]){
+class DungeonGraph (val graph: Map[Dot, DungeonCard]){
 
 
-  def fit(pos: Dot, card: MapCard): Boolean ={
+  def fit(pos: Dot, card: DungeonCard): Boolean ={
     val sblPositions = neighbors(pos)
     val Dot(row, _) = pos
 
     lazy val cardsFit = sblPositions.map(e => card.fit(e._1, graph(e._2))).reduceLeft(_ && _)
     lazy val cardsConnect = sblPositions.map(e => card.connect(e._1, graph(e._2))).reduceLeft(_ || _)
-    lazy val tocuhesNumTreasures = sblPositions.values.map(s => DungeonGraph.TREASURES_POINTS(s)).filter(x => x).size
+    lazy val tocuhesNumTreasures = sblPositions.values.map(s => DungeonGraph.TREASURES_POINTS(s)).count(x => x)
     !graph.contains(pos) && row > 0 && row <= DungeonGraph.GRAPH_HEIGHT && sblPositions.nonEmpty && cardsFit && cardsConnect && tocuhesNumTreasures < sblPositions.size
   }
 
-  def +(elt: (Dot, MapCard)): DungeonGraph = {
+  def +(elt: (Dot, DungeonCard)): DungeonGraph = {
     val (pos, card) = elt
     if(fit(pos, card)) new DungeonGraph(graph + (pos -> card)) else this
   }
@@ -61,9 +61,9 @@ class DungeonGraph (val graph: Map[Dot, MapCard]){
   }
 
   def goldFound(coord : Dot=Dot(0, 0), g: Map[Dot, Card]=graph.toMap): Boolean = {
-    g(coord) match {
-      case _: DEADEND => false
-      case _: GOLD => true
+    g(coord).cardType match {
+      case DEADEND => false
+      case GOLD => true
       case _ if g.nonEmpty => neighbors(coord, g).values.map(dot => goldFound(dot, g - coord)).exists(res => res)
       case _ => false
     }

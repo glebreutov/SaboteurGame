@@ -20,22 +20,58 @@ object Direction {
     }
   }
 }
+abstract class CardType
+object DUNGEON extends CardType
+object DEADEND extends CardType
+object START extends CardType
+object GOLD extends CardType
+object ORE extends CardType
 
-abstract class Card extends Cloneable {
+class SpellCard extends CardType
+class  Curse extends CardType
+class  Crue extends CardType
+object  BRAKE_LANTERN extends CardType
+object  FIX_LANTERN extends CardType
+object  BRAKE_TRUCK extends CardType
+object  FIX_TRUCK extends CardType
+object  BRAKE_PICK extends CardType
+object  FIX_PICK extends CardType
+object  FIX_LANTERN_PICK extends CardType
+object  FIX_PICK_TRUCK extends CardType
+object  FIX_LANTERN_TRUCK extends CardType
 
+object SpecialCard extends CardType
+object  REVEAL extends CardType
+object BOOM extends CardType
+
+class Card(val cardType: CardType) extends Cloneable {
+  val id = Card.seq()
   def *(i: Int): List[Card] ={
 
-    val cards = for (_ <- 0 to i) yield clone().asInstanceOf[Card]
+    val cards = for (_ <- 0 to i) yield new Card(cardType)
     cards.toList
   }
 
   override def toString: String = this.getClass.getSimpleName
 }
-abstract class MapCard(tunnels: Direction *) extends Card {
-  val top: Boolean = tunnels.contains(Top)
-  val bottom: Boolean = tunnels.contains(Bottom)
-  val left: Boolean = tunnels.contains(Left)
-  val right: Boolean = tunnels.contains(Right)
+
+object Card {
+  var counter = 0
+  
+  def seq() = {
+    try{
+      counter
+    }finally {
+      counter +=1
+    }
+  }
+}
+
+case class DungeonCard(override val cardType: CardType, tunnels: Direction *) extends Card(cardType) {
+  def top: Boolean = tunnels.contains(Top)
+  def bottom: Boolean = tunnels.contains(Bottom)
+  def left: Boolean = tunnels.contains(Left)
+  def right: Boolean = tunnels.contains(Right)
 
   def way(direction: Direction): Boolean = {
     direction match {
@@ -45,44 +81,46 @@ abstract class MapCard(tunnels: Direction *) extends Card {
       case Right => right
     }
   }
-  def connect(side: Direction, other: MapCard): Boolean ={
+  def connect(side: Direction, other: DungeonCard): Boolean ={
     way(side) && fit(side, other)
   }
 
-  def fit(side: Direction, oth: MapCard): Boolean ={
+  def fit(side: Direction, oth: DungeonCard): Boolean ={
     way(side) == oth.way(Direction.opposite(side))
+  }
+
+  override def *(i: Int): List[Card] ={
+    val cards = for (_ <- 0 to i) yield new DungeonCard(cardType, tunnels :_*)
+    cards.toList
+  }
+
+  override def equals(obj: scala.Any): Boolean = {
+
+    lazy val other = obj.asInstanceOf[DungeonCard]
+
+    obj.isInstanceOf[DungeonCard] && other.id == id && other.top == top&&
+      other.bottom==bottom && other.right == right && other.left==left
   }
 
 }
 
-case class DUNGEON(tunnels: Direction *) extends MapCard(tunnels : _*)
-case class DEADEND(tunnels: Direction *) extends MapCard(tunnels : _*)
-case class START(tunnels: Direction *) extends MapCard(tunnels : _*)
-case class GOLD(tunnels: Direction *) extends MapCard(tunnels : _*)
-case class ORE(tunnels: Direction *) extends MapCard(tunnels : _*)
+object DungeonCard{
+  def dungeon(tunnels: Direction *): DungeonCard = {
+    DungeonCard(DUNGEON, tunnels :_*)
+  }
 
-class SpellCard extends Card
-class Curse extends SpellCard
-class Crue extends SpellCard
-class  BRAKE_LANTERN extends Curse
-class  FIX_LANTERN extends Crue
-class  BRAKE_TRUCK extends Curse
-class  FIX_TRUCK extends Crue
-class  BRAKE_PICK extends Curse
-class  FIX_PICK extends Crue
-class  FIX_LANTERN_PICK extends Crue
-class  FIX_PICK_TRUCK extends Crue
-class  FIX_LANTERN_TRUCK extends Crue
+  def deadend(tunnels: Direction *): DungeonCard ={
+    DungeonCard(DEADEND, tunnels :_*)
+  }
+}
 
-class SpecialCard extends Card
-class  REVEAL extends SpecialCard
-class BOOM extends SpecialCard
+
 
 
 object Cards {
 
-  def upsideDown(card: MapCard): MapCard = {
-    def mirrorParams(card: MapCard): List[Direction] = {
+  def upsideDown(card: DungeonCard): DungeonCard = {
+    def mirrorParams(card: DungeonCard): List[Direction] = {
       var list:List[Direction] = List()
       if(!card.top)  list :+= Top
       if(!card.bottom)  list :+= Bottom
@@ -90,43 +128,50 @@ object Cards {
       if(!card.left)  list :+= Left
       list
     }
-    card match {
-      case _: DUNGEON => DUNGEON(mirrorParams(card) :_*)
-      case _: DEADEND => DEADEND(mirrorParams(card) :_*)
+    card.cardType match {
+      case DUNGEON => DungeonCard(DUNGEON, mirrorParams(card) :_*)
+      case DEADEND => DungeonCard(DEADEND, mirrorParams(card) :_*)
     }
   }
 
+  val ORE_CARD = DungeonCard(ORE, Top, Bottom, Left, Right)
+  val GOLD_CARD = DungeonCard(GOLD, Top, Bottom, Left, Right)
+  val START_CARD = DungeonCard(START, Bottom)
+
   def deck: List[Card] = {
-    var deck: List[Card] = DUNGEON(Top, Bottom) * 3
-    deck :::= DUNGEON(Top, Bottom, Left, Right) * 5
-    deck :::= DUNGEON(Top, Bottom, Right) * 5
-    deck :::= DUNGEON(Bottom, Left) * 4
-    deck :::= DUNGEON(Bottom, Left, Right) * 5
-    deck :::= DUNGEON(Bottom, Right) * 5
-    deck :::= DUNGEON(Left, Right) * 4
-    deck ::= DEADEND(Top, Bottom)
-    deck ::= DEADEND(Top, Bottom, Left, Right)
-    deck ::= DEADEND(Top, Bottom, Right)
-    deck ::= DEADEND(Left, Bottom)
-    deck ::= DEADEND(Bottom, Left, Right)
-    deck ::= DEADEND(Right, Bottom)
-    deck ::= DEADEND(Bottom)
-    deck ::= DEADEND(Left, Right)
-    deck ::= DEADEND(Right)
-    deck :::= new BRAKE_PICK() * 3
-    deck :::= new FIX_PICK() * 2
-    deck :::= new BRAKE_LANTERN() * 3
-    deck :::= new FIX_LANTERN() * 2
-    deck :::= new BRAKE_TRUCK() * 3
-    deck :::= new FIX_TRUCK() * 2
-    deck :::= new REVEAL() * 6
-    deck :::= new BOOM() * 3
-    deck ::= new FIX_LANTERN_PICK()
-    deck ::= new FIX_PICK_TRUCK()
-    deck ::= new FIX_LANTERN_TRUCK()
+    var deck: List[Card] = DungeonCard(DUNGEON, Top, Bottom) * 3
+    deck :::= DungeonCard(DUNGEON, Top, Bottom, Left, Right) * 5
+    deck :::= DungeonCard(DUNGEON, Top, Bottom, Right) * 5
+    deck :::= DungeonCard(DUNGEON, Bottom, Left) * 4
+    deck :::= DungeonCard(DUNGEON, Bottom, Left, Right) * 5
+    deck :::= DungeonCard(DUNGEON, Bottom, Right) * 5
+    deck :::= DungeonCard(DUNGEON, Left, Right) * 4
+    deck ::= DungeonCard(DEADEND, Top, Bottom)
+    deck ::= DungeonCard(DEADEND, Top, Bottom, Left, Right)
+    deck ::= DungeonCard(DEADEND, Top, Bottom, Right)
+    deck ::= DungeonCard(DEADEND, Left, Bottom)
+    deck ::= DungeonCard(DEADEND, Bottom, Left, Right)
+    deck ::= DungeonCard(DEADEND, Right, Bottom)
+    deck ::= DungeonCard(DEADEND, Bottom)
+    deck ::= DungeonCard(DEADEND, Left, Right)
+    deck ::= DungeonCard(DEADEND, Right)
+    deck :::= new Card(BRAKE_PICK) * 3
+    deck :::= new Card(FIX_PICK) * 2
+    deck :::= new Card(BRAKE_LANTERN) * 3
+    deck :::= new Card(FIX_LANTERN) * 2
+    deck :::= new Card(BRAKE_TRUCK) * 3
+    deck :::= new Card(FIX_TRUCK) * 2
+    deck :::= new Card(REVEAL) * 6
+    deck :::= new Card(BOOM) * 3
+    deck ::= new Card(FIX_LANTERN_PICK)
+    deck ::= new Card(FIX_PICK_TRUCK)
+    deck ::= new Card(FIX_LANTERN_TRUCK)
     deck
   }
   def deal(): List[Card] = {
     Random.shuffle(Cards.deck)
   }
 }
+
+
+

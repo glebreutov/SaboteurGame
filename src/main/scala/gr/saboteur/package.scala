@@ -6,5 +6,5 @@ package object saboteur {
   type Cards = List[Card]
   type Turns = List[PlayersTurn]
   type Hand = Set[Card]
-  type Spells = Set[SpellCard]
+  type Spells = Set[Card]
 }

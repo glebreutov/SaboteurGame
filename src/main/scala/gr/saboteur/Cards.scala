@@ -1,6 +1,7 @@
 package gr.saboteur
 
 import scala.util.Random
+import io.circe._
 import io.circe.generic.auto._
 
 class Direction

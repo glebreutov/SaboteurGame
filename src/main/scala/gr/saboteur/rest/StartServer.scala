@@ -9,6 +9,6 @@ object StartServer extends StreamApp {
   val port: Int = envOrNone("HTTP_PORT").fold(8080)(_.toInt)
 
   def stream(args: List[String]): fs2.Stream[Task, Nothing] = BlazeBuilder.bindHttp(port)
-    .mountService(HelloWorld.service, "/")
+    .mountService(SabateurWeb.service, "/")
     .serve
 }

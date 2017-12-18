@@ -1,7 +1,7 @@
 package gr.saboteur
 
 import gr.saboteur.DungeonGraph.Dot
-import gr.saboteur.rest.HelloWorld.PlayerID
+import gr.saboteur.rest.SabateurWeb.PlayerID
 
 import scala.util.Random
 
@@ -112,13 +112,17 @@ class Game (val players: Players, val deck: Cards, val dungeon: DungeonGraph, va
 
   def makeTurn(turn: PlayersTurn): (Game, String) = {
     turn.action() match {
-      case _: MakeTunnel.type => tunnel(turn)
-      case _: CastSpell.type  => castSpell(turn)
-      case _: RevealTreasure.type  => reval(turn)
-      case _: DestroyTunnel.type  => destroy(turn)
+      case MakeTunnel => tunnel(turn)
+      case CastSpell  => castSpell(turn)
+      case RevealTreasure  => reval(turn)
+      case DestroyTunnel  => destroy(turn)
       case _ => pass(turn)
 
     }
+  }
+
+  def legitTurn (turn: PlayersTurn): Boolean = {
+    makeTurn(turn)._1 != this
   }
 
   def tunnel(turn: PlayersTurn): (Game, String) = {

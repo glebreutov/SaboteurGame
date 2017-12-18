@@ -1,7 +1,7 @@
 package gr.saboteur.rest
 
 import gr.saboteur.{Game, PlayersTurn}
-import gr.saboteur.rest.HelloWorld.{PlayerID, SessionId}
+import gr.saboteur.rest.SabateurWeb.{PlayerID, SessionId}
 import gr.saboteur.rest.UID.sha256Hash
 import io.circe._
 import org.http4s._
@@ -20,7 +20,7 @@ object UID {
   def getPlayerId() : PlayerID = sha256Hash(System.currentTimeMillis().toString + "player")
 }
 case class JoinMsg(sessionId: SessionId, playerID: PlayerID)
-object HelloWorld {
+object SabateurWeb {
 
   type PlayerID = String
   type SessionId = String
@@ -33,7 +33,7 @@ object HelloWorld {
     case GET -> Root / "join" / sessionId => Ok(join(sessionId))
     case GET -> Root / "start" / sessionId / playerID => Ok(startGame(sessionId, playerID))
     case GET -> Root / "snapshot" / sessionId / playerID => Ok(gameSanpshot(sessionId, playerID))
-    case GET -> Root / "make_turn" / sessionId / playerID / turn => Ok(gameSanpshot(sessionId, playerID))
+    case req @ POST -> Root / "makeTurn" / sessionId / playerID  => Ok(gameSanpshot(sessionId, playerID))
   }
 
   def responseOk(fields: (String, String) *): Json = {
@@ -111,8 +111,8 @@ object HelloWorld {
     else if(game.endOfGame()){
       val result: String = if (game.goldFound()) "Dwarfs won" else "Sabateurs won"
       responseErr("Game already ended " + result)
-    }else if(updated == game){
-      responseErr("You can't play that way")
+    }else if(!game.legitTurn(turn)){
+      responseErr(message)
     }else {
       games(sessionId) = updated
       gameSanpshot(sessionId, playerID)

@@ -1,4 +1,5 @@
 #Sabateur game
+
 This is Scala implementation of Sabateur game with rest interface. 
 
 ##Rest interface

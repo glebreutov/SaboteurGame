@@ -77,27 +77,22 @@ object Game {
   def start(plist: List[PlayerID]): Game = {
     var deck  = Cards.deal()
     val saboteur = Random.nextInt(plist.size)
-    val players = for (i <- 0 to plist.size) yield {
-      val hand = (deck take 6).toSet
-      deck = deck drop 6
-      if (i == saboteur) Player(plist(i), SABOTEUR, hand) else Player(plist(i), DWARF, hand)
+    val players = for (i <- plist.indices) yield {
+      val hand = (deck take cardsPerHand).toSet
+      deck = deck drop cardsPerHand
+      val role = if (i == saboteur) SABOTEUR else DWARF
+      Player(plist(i), role, hand)
     }
 
     new Game(players.toList, deck, DungeonGraph.init(0), Nil)
   }
 
+  def cardsPerHand = 6
 
   def start(playersCount: Int): Game = {
-
-    var deck  = Cards.deal()
     val shuffledNames = Random.shuffle(DwarfName.values.toList.map(n => n.toString))
-    val players = for (i <- 0 to playersCount) yield {
-      val hand = (deck take 6).toSet
-      deck = deck drop 6
-      if (i == 0) Player(shuffledNames(i), SABOTEUR, hand) else Player(shuffledNames(i), DWARF, hand)
-    }
 
-    new Game(players.toList, deck, DungeonGraph.init(0), List())
+    start(shuffledNames take playersCount)
   }
 
 }
@@ -177,6 +172,9 @@ class Game (val players: Players, val deck: Cards, val dungeon: DungeonGraph, va
       }
     }
     val game = new Game(skipEmptyHands(newplayers.tail :+ player), deck drop 1, newdungeon, turns :+ turn)
+    if(!game.players.forall(_.hand.size == Game.cardsPerHand) && game.deck.nonEmpty){
+      throw new GameException("Wrong card deal")
+    }
     (game, "Ok")
   }
 

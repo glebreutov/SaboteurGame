@@ -15,11 +15,18 @@ object DwarfName extends Enumeration {
 class Role
 object DWARF extends Role
 object SABOTEUR extends Role
-case class Player (id: String, role: Role, hand: Hand, spells: Spells = Set()){
+case class Player (id: String, role: Role, hand: Hand, spells: Spells = Set(), revelations: Set[Dot] = Set()){
 
-  def swap(remove: Card, add: Card): Player = {
-    val newHand = if(add != null) hand - remove + add else hand - remove
-    Player(id, role, newHand, spells)
+  def reveal(d: Dot): Player ={
+    Player(id, role, hand, spells, revelations + d)
+  }
+
+  def add(add: List[Card]): Player = {
+    Player(id, role, hand ++ add, spells, revelations)
+  }
+
+  def remove(remove: Card): Player = {
+    Player(id, role, hand - remove, spells, revelations)
   }
 
   def spell(spell: SpellCard): Player = {
@@ -32,7 +39,7 @@ case class Player (id: String, role: Role, hand: Hand, spells: Spells = Set()){
       case _ : FIX_LANTERN_TRUCK=> spells.filter(d => !d.isInstanceOf[BRAKE_LANTERN] || !d.isInstanceOf[BRAKE_TRUCK])
       case _ : FIX_PICK_TRUCK=> spells.filter(d => !d.isInstanceOf[BRAKE_PICK] || !d.isInstanceOf[BRAKE_TRUCK])
     }
-    if(spells.size > 2) this else Player(id, role, hand, newSpells)
+    if(spells.size > 2) this else Player(id, role, hand, newSpells, revelations)
   }
   override def toString: String = id + " spells: " + spells
 }
@@ -131,9 +138,7 @@ class Game (val players: Players, val deck: Cards, val dungeon: DungeonGraph, va
     if(upadtedGraph == dungeon)
       throw new GameException("Card doesn't fit")
 
-    val playersCard = if(deck.nonEmpty) deck.head else null
-    val deckLeft = if (deck.nonEmpty) deck.tail else List()
-    new Game(players.tail :+ players.head.swap(turn.card, playersCard), deckLeft, upadtedGraph, turns :+ turn)
+    endOfTurn(turn, newdungeon = upadtedGraph)
   }
 
   def castSpell(turn: PlayersTurn): Game = {
@@ -146,29 +151,34 @@ class Game (val players: Players, val deck: Cards, val dungeon: DungeonGraph, va
 
     val updatedPlayers = for(player <- players.tail :+ players.head)
       yield if(player == turn.victim) victim else player
-    val playersCard = if(deck.nonEmpty) deck.head else null
-    val deckLeft = if (deck.nonEmpty) deck.tail else List()
-    new Game(updatedPlayers.tail :+ updatedPlayers.head.swap(turn.card, playersCard), deckLeft, dungeon, turns :+ turn)
+
+    endOfTurn(turn, newplayers = updatedPlayers)
   }
 
   def reval(turn: PlayersTurn): Game = {
     checkCardPresence(turn.card)
-    val playersCard = if(deck.nonEmpty) deck.head else null
-    val deckLeft = if (deck.nonEmpty) deck.tail else List()
-    new Game(players.tail :+ players.head.swap(turn.card, playersCard), deckLeft, dungeon, turns :+ turn)
+    val player = players.head.reveal(turn.location)
+    endOfTurn(turn, player :: players.tail)
+    //val fx: _ => Player = {player}
+  }
+
+  def endOfTurn(turn: PlayersTurn, newplayers: Players = players, newdungeon: DungeonGraph = dungeon): Game = {
+    val player = newplayers.head
+      .remove(turn.card)
+      .add(deck take 1)
+    if (newplayers.lengthCompare(players.size) != 0){
+      throw new GameException("Count of players can't be changed during game")
+    }
+    new Game(newplayers.tail :+ player, deck drop 1, newdungeon, turns :+ turn)
   }
 
   def destroy(turn: PlayersTurn): Game = {
     checkCardPresence(turn.card)
-    val playersCard = if(deck.nonEmpty) deck.head else null
-    val deckLeft = if (deck.nonEmpty) deck.tail else List()
-    new Game(players.tail :+ players.head.swap(turn.card, playersCard), deckLeft, dungeon - turn.location, turns :+ turn)
+    endOfTurn(turn, newdungeon = dungeon - turn.location)
   }
 
   def pass(turn: PlayersTurn): Game = {
-    val playersCard = if(deck.nonEmpty) deck.head else null
-    val deckLeft = if (deck.nonEmpty) deck.tail else List()
-    new Game(players.tail :+ players.head.swap(turn.card, playersCard), deckLeft, dungeon, turns :+ turn)
+    endOfTurn(turn)
   }
 
   def endOfGame(): Boolean = dungeon.goldFound() || (deck.isEmpty && players.forall(p => p.hand.isEmpty))

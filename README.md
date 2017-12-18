@@ -30,6 +30,7 @@ allows game creator to start game
 ``` 
 ### snapshot 
 **url:** /snapshot/_session_id_/_player_id_
+
 gives full information about game state to player
 
 #### response:

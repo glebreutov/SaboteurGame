@@ -1,5 +1,8 @@
-Rest interface
-===
+#Sabateur game
+This is Scala implementation of Sabateur game with rest interface. 
+
+##Rest interface
+
 ### create new game
 **url:** /createGame
 

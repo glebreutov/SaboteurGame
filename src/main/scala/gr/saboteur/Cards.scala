@@ -1,6 +1,7 @@
 package gr.saboteur
 
 import scala.util.Random
+import io.circe.generic.auto._
 
 class Direction
   object Top extends Direction
@@ -52,7 +53,7 @@ class Card(val cardType: CardType) extends Cloneable {
     cards.toList
   }
 
-  override def toString: String = this.getClass.getSimpleName
+  override def toString: String = cardType.getClass.getSimpleName
 }
 
 object Card {
@@ -102,6 +103,7 @@ case class DungeonCard(override val cardType: CardType, tunnels: Direction *) ex
       other.bottom==bottom && other.right == right && other.left==left
   }
 
+  override def toString: String = DungeonGen.nicePrinter(this)
 }
 
 object DungeonCard{

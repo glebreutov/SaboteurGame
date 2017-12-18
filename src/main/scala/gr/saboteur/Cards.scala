@@ -54,7 +54,7 @@ class Card(val cardType: CardType) extends Cloneable {
     cards.toList
   }
 
-  override def toString: String = cardType.getClass.getSimpleName
+  override def toString: String = id + "-" + cardType.getClass.getSimpleName
 }
 
 object Card {
@@ -62,7 +62,7 @@ object Card {
   
   def seq() = {
     try{
-      counter
+      counter.toString
     }finally {
       counter +=1
     }
@@ -104,7 +104,7 @@ case class DungeonCard(override val cardType: CardType, tunnels: Direction *) ex
       other.bottom==bottom && other.right == right && other.left==left
   }
 
-  override def toString: String = DungeonGen.nicePrinter(this)
+  override def toString: String = super.toString + "@" + DungeonGen.nicePrinter(this)
 }
 
 object DungeonCard{
@@ -141,7 +141,7 @@ object Cards {
   val GOLD_CARD = DungeonCard(GOLD, Top, Bottom, Left, Right)
   val START_CARD = DungeonCard(START, Bottom)
 
-  def deck: List[Card] = {
+  val deck: List[Card] = {
     var deck: List[Card] = DungeonCard(DUNGEON, Top, Bottom) * 3
     deck :::= DungeonCard(DUNGEON, Top, Bottom, Left, Right) * 5
     deck :::= DungeonCard(DUNGEON, Top, Bottom, Right) * 5

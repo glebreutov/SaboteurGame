@@ -1,4 +1,5 @@
-import gr.saboteur.{Cards, DungeonCard, PlayersTurn}
+import gr.saboteur.DungeonGraph.Dot
+import gr.saboteur._
 import org.scalatest.{FlatSpec, Matchers}
 
 
@@ -14,7 +15,9 @@ object JsonTest extends App {
 //  implicit val DungeonCardDecoder: Decoder[DungeonCard] = deriveDecoder[DungeonCard]
 //  implicit val DungeonCardEncoder: Encoder[DungeonCard] = deriveEncoder[DungeonCard]
 
-  println(List(1, 2,3).asJson)
+  println(Dot(0, 0).asJson)
+//  println(new Card(BRAKE_LANTERN).asJson)
+  //println(Player("dcsdsc", SABOTEUR, Set()))
   // res0: String = {"Qux":{"i":13,"d":14.0}}
 
   //decode[Foo](foo.asJson.spaces4)

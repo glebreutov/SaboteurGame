@@ -1,6 +1,7 @@
 package gr.saboteur.rest
 
-import gr.saboteur.{Game, PlayersTurn}
+import gr.saboteur.DungeonGraph.Dot
+import gr.saboteur._
 import gr.saboteur.rest.SabateurWeb.{PlayerID, SessionId}
 import gr.saboteur.rest.UID.sha256Hash
 import io.circe._
@@ -8,6 +9,8 @@ import org.http4s._
 import org.http4s.circe._
 import org.http4s.server._
 import org.http4s.dsl._
+import io.circe.syntax._
+import io.circe.generic.auto._
 
 import scala.collection.mutable
 
@@ -20,6 +23,11 @@ object UID {
   def getPlayerId() : PlayerID = sha256Hash(System.currentTimeMillis().toString + "player")
 }
 case class JoinMsg(sessionId: SessionId, playerID: PlayerID)
+case class Pass(cardId: Int)
+case class JPlayer(id: PlayerID, spells: Set[Int])
+case class GameStatus(sessionId: SessionId, playerID: PlayerID,
+                      turns: Int, goldFound: Boolean, gameEnd: Boolean,
+                      hand: Set[String], spells: Set[String], map: List[(Dot, String)], revelations: Set[(Dot, String)])
 object SabateurWeb {
 
   type PlayerID = String
@@ -33,9 +41,40 @@ object SabateurWeb {
     case GET -> Root / "join" / sessionId => Ok(join(sessionId))
     case GET -> Root / "start" / sessionId / playerID => Ok(startGame(sessionId, playerID))
     case GET -> Root / "snapshot" / sessionId / playerID => Ok(gameSanpshot(sessionId, playerID))
-    case req @ POST -> Root / "makeTurn" / sessionId / playerID  => Ok(gameSanpshot(sessionId, playerID))
+    case GET -> Root / "pass-turn" / sessionId / playerID / cardId => {
+      val json = maybeCard(cardId).map(c => makeTurn(sessionId, playerID, PlayersTurn(c)))
+      Ok(json.getOrElse(responseErr("Invalid card id")))
+    }
+    case GET -> Root / "victim-turn" / sessionId / playerID / cardId / otherPlayerId => {
+      val turnRes = maybeCard(cardId)
+        .flatMap(c => maybePlayer(sessionId, otherPlayerId).map(p => PlayersTurn(c, victim = p)))
+        .map(t => makeTurn(sessionId, playerID, t))
+      Ok(turnRes.getOrElse(responseErr("Invalid card id or player id")))
+    }
+    case GET -> Root / "map-turn" / sessionId / playerID / cardId / point => {
+      val turnRes = maybeCard(cardId).flatMap(c => maybePoint(point).map(d => PlayersTurn(c, location = d)))
+        .map(t => makeTurn(sessionId, playerID, t))
+      Ok(turnRes.getOrElse(responseErr("Invalid card id or dot")))
+    }
   }
 
+  def maybePoint(point: String): Option[Dot] = {
+    def isAllDigits(x: String) = x forall Character.isDigit
+
+    val strings = point.split("@").filter(isAllDigits).map(_.toInt)
+    if(strings.length == 2){
+      Some(Dot(strings(0), strings(1)))
+    }else {
+      None
+    }
+  }
+  def maybePlayer(sessionId: SessionId, id: PlayerID): Option[Player] = {
+    games.get(sessionId).flatMap(g => g.players.find(_.id == id))
+  }
+
+  def maybeCard(id: String): Option[Card] = {
+    Cards.deck.find(_.id == id)
+  }
   def responseOk(fields: (String, String) *): Json = {
     val tuples = (fields :+ ("status"-> "ok")).map(t => t._1 -> Json.fromString(t._2))
     Json.obj(tuples :_*)
@@ -93,8 +132,16 @@ object SabateurWeb {
   def gameSanpshot(sessionId: SessionId, playerID: PlayerID): Json = {
     if(!games.contains(sessionId))
       responseErr("Invalid session id")
-    else
-      responseErr("method not implemented")
+    else {
+      val game = games(sessionId)
+      val player = game.players.filter(_.id == playerID).head
+      val hand = player.hand.map(_.toString)
+      val spells = player.spells.map(_.toString)
+      val dungeon = game.dungeon.graph.map(e => e._1 -> e._2.toString).toList
+      val revelations = player.revelations.map(dot => dot-> game.dungeon.graph(dot).toString)
+      GameStatus(sessionId, playerID, game.turns.size, game.goldFound(), game.endOfGame(), hand, spells, dungeon, revelations).asJson
+    }
+
   }
 
   def makeTurn(sessionId: SessionId, playerID: PlayerID, turn: PlayersTurn): Json = {

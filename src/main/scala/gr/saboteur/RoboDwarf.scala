@@ -33,14 +33,15 @@ object RoboDwarf {
 
   def boomReveal(hand: Hand, graph: DungeonGraph): Turns = {
     hand.filter(_.cardType == BOOM)
-      .flatMap(c=> graph.graph.keySet.map(p => PlayersTurn(c, p))).toList
+      .flatMap(c=> graph.graph.filter(e => e._2.cardType == DUNGEON || e._2.cardType == DEADEND)
+        .keySet.map(p => PlayersTurn(c, p))).toList
   }
 
   def everyTurn(game: Game): Turns = {
     val hand = game.players.head.hand
 //    val tunnels = mapTurns(hand, game.graph)
 //
-    (mapSpells(hand, game.players) take 1) :::mapTurns(game) ::: mapReveal(hand) ::: List(PlayersTurn(hand.head))
+    boomReveal(hand, game.dungeon) ::: (mapSpells(hand, game.players) take 1) :::mapTurns(game) ::: mapReveal(hand) ::: List(PlayersTurn(hand.head))
   }
 
   def randomTurn(game: Game): PlayersTurn = {

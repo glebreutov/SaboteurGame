@@ -205,7 +205,7 @@ class Game (val players: Players, val deck: Cards, val dungeon: DungeonGraph, va
     endOfTurn(turn)
   }
 
-  def endOfGame(): Boolean = {
+  def gameOver(): Boolean = {
     val emptyHands = players.forall(p => p.hand.isEmpty)
     val everyonePassed = turns.take(players.length).forall(t => t.action() == Pass)
     dungeon.goldFound() || (deck.isEmpty && (emptyHands || everyonePassed))

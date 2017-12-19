@@ -5,7 +5,7 @@ object StartGame extends App {
   var game = Game.start(PLAYER_COUNT)
   println("Game started")
   var i = 0
-  while (!game.endOfGame()){
+  while (!game.gameOver()){
 
     val player = game.players.head
     println("It's", player.id, " turn now, tunr num:", i, "cards in deck", game.deck.length, "players count", game.players.length)

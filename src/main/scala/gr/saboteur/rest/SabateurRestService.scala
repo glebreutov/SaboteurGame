@@ -139,7 +139,7 @@ object SabateurWeb {
       val spells = player.spells.map(_.toString)
       val dungeon = game.dungeon.graph.map(e => e._1 -> e._2.toString).toList
       val revelations = player.revelations.map(dot => dot-> game.dungeon.graph(dot).toString)
-      GameStatus(sessionId, playerID, game.turns.size, game.goldFound(), game.endOfGame(), hand, spells, dungeon, revelations).asJson
+      GameStatus(sessionId, playerID, game.turns.size, game.goldFound(), game.gameOver(), hand, spells, dungeon, revelations).asJson
     }
 
   }
@@ -155,7 +155,7 @@ object SabateurWeb {
       responseErr("Game not started")
     else if(game.players.head.id != playerID)
       responseErr("It's not your turn")
-    else if(game.endOfGame()){
+    else if(game.gameOver()){
       val result: String = if (game.goldFound()) "Dwarfs won" else "Sabateurs won"
       responseErr("Game already ended " + result)
     }else if(!game.legitTurn(turn)){

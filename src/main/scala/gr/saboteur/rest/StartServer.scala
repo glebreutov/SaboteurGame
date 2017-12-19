@@ -8,7 +8,7 @@ import org.http4s.util.StreamApp
 object StartServer extends StreamApp {
   val port: Int = envOrNone("HTTP_PORT").fold(8080)(_.toInt)
 
-  def stream(args: List[String]): fs2.Stream[Task, Nothing] = BlazeBuilder.bindHttp(port)
+  def stream(args: List[String]): fs2.Stream[Task, Nothing] = BlazeBuilder.bindHttp(port, "0.0.0.0")
     .mountService(SabateurWeb.service, "/")
     .serve
 }

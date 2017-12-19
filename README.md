@@ -1,6 +1,6 @@
-# Sabateur game
+# Saboteur game
 
-This is Scala implementation of Sabateur game with rest interface. 
+This is Scala implementation of Saboteur game with rest interface. 
 
 ## Rest interface
 
@@ -23,6 +23,8 @@ allow's player to join game by session id
 {"playerId":"a293fc1b5130ae09e1e54592ee9ea66d9e5245ad441b973a0d1df94556d373f5","status":"ok"}
 ``` 
 ### start game
+**url:** /start/_session_id_/_player_id_
+
 allows game creator to start game
 #### response:
 ```$json

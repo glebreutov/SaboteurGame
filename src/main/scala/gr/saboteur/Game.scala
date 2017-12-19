@@ -34,9 +34,9 @@ case class Player (id: String, role: Role, hand: Hand, spells: Spells = Set(), r
       case FIX_LANTERN => spells.filter(_.cardType != BRAKE_LANTERN)
       case FIX_TRUCK => spells.filter(_.cardType != BRAKE_TRUCK)
       case FIX_PICK => spells.filter(_.cardType != BRAKE_PICK)
-      case FIX_LANTERN_PICK=> spells.filter(_.cardType == BRAKE_TRUCK)
-      case FIX_LANTERN_TRUCK=> spells.filter(_.cardType == BRAKE_PICK)
-      case FIX_PICK_TRUCK=> spells.filter(_.cardType == BRAKE_LANTERN)
+      case FIX_LANTERN_PICK=> spells.find(_.cardType != BRAKE_TRUCK).map(c=> spells - c).getOrElse(spells)
+      case FIX_LANTERN_TRUCK=> spells.find(_.cardType != BRAKE_PICK).map(c=> spells - c).getOrElse(spells)
+      case FIX_PICK_TRUCK=> spells.find(_.cardType != BRAKE_LANTERN).map(c=> spells - c).getOrElse(spells)
       case _  => spells + spell
     }
     if(spells.size > 2) this else Player(id, role, hand, newSpells, revelations)
@@ -74,13 +74,25 @@ case class PlayersTurn(card: Card, location: Dot = null, victim: Player = null, 
 
 
 object Game {
+
+  val MAX_PLAYERS_PER_GAME = 10
+
   def start(plist: List[PlayerID]): Game = {
+    def chooseSaboteurs(playersCount: Int): Set[Int] = {
+      var saboteurs = Set(Random.nextInt(playersCount))
+      val sabateursCount = if(playersCount <= 4) 0 else if (playersCount <= 6) 1 else if(playersCount <= 9) 2 else 3
+      while (saboteurs.size < sabateursCount){
+        saboteurs += Random.nextInt(playersCount)
+      }
+      saboteurs
+    }
     var deck  = Cards.deal()
-    val saboteur = Random.nextInt(plist.size)
+    val playersCount = plist.length
+    val saboteurs = chooseSaboteurs(playersCount)
     val players = for (i <- plist.indices) yield {
-      val hand = (deck take cardsPerHand).toSet
-      deck = deck drop cardsPerHand
-      val role = if (i == saboteur) SABOTEUR else DWARF
+      val hand = (deck take cardsPerHand(playersCount)).toSet
+      deck = deck drop cardsPerHand(playersCount)
+      val role = if (saboteurs.contains(i)) SABOTEUR else DWARF
       Player(plist(i), role, hand)
     }
 
@@ -88,7 +100,9 @@ object Game {
     new Game(players.toList, deck, DungeonGraph.init(treasurepos), Nil)
   }
 
-  def cardsPerHand = 6
+  def cardsPerHand(playersCount: Int) = {
+    if(playersCount <= 5) 6 else if (playersCount <= 7) 5 else 4
+  }
 
   def start(playersCount: Int): Game = {
     val shuffledNames = Random.shuffle(DwarfName.values.toList.map(n => n.toString))
@@ -177,7 +191,7 @@ class Game (val players: Players, val deck: Cards, val dungeon: DungeonGraph, va
       }
     }
     val game = new Game(skipEmptyHands(newplayers.tail :+ player), deck drop 1, newdungeon, turns :+ turn)
-    if(!game.players.forall(_.hand.size == Game.cardsPerHand) && game.deck.nonEmpty){
+    if(!game.players.forall(_.hand.size == Game.cardsPerHand(players.length)) && game.deck.nonEmpty){
       throw new GameException("Wrong card deal")
     }
     (game, "Ok")
@@ -191,7 +205,11 @@ class Game (val players: Players, val deck: Cards, val dungeon: DungeonGraph, va
     endOfTurn(turn)
   }
 
-  def endOfGame(): Boolean = dungeon.goldFound() || (deck.isEmpty && players.forall(p => p.hand.isEmpty))
+  def endOfGame(): Boolean = {
+    val emptyHands = players.forall(p => p.hand.isEmpty)
+    val everyonePassed = turns.take(players.length).forall(t => t.action() == Pass)
+    dungeon.goldFound() || (deck.isEmpty && (emptyHands || everyonePassed))
+  }
 
 }
 

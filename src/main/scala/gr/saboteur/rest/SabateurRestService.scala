@@ -113,14 +113,14 @@ object SabateurWeb {
     games.contains(sessionId)
   }
 
-  val MAX_PLAYERS_PER_GAME = 6
+
 
   def join(sessionId: SessionId) : Json = {
     if(!lobby.contains(sessionId))
       responseErr("Invalid session id")
     else if(isGameStarted(sessionId)){
       responseErr("Game already started")
-    }else if(playersCount(sessionId) >= MAX_PLAYERS_PER_GAME){
+    }else if(playersCount(sessionId) >= Game.MAX_PLAYERS_PER_GAME){
       responseErr("Can't add more players to game")
     }else {
       val playerID = UID.getPlayerId()

@@ -88,7 +88,7 @@ case class DungeonCard(override val cardType: CardType, tunnels: Direction *) ex
   }
 
   def fit(side: Direction, oth: DungeonCard): Boolean ={
-    way(side) == oth.way(Direction.opposite(side))
+    way(side) == oth.way(Direction.opposite(side)) && oth.cardType != DEADEND
   }
 
   override def *(i: Int): List[Card] ={

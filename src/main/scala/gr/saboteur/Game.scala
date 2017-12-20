@@ -31,12 +31,12 @@ case class Player (id: String, role: Role, hand: Hand, spells: Spells = Set(), r
 
   def spell(spell: Card): Player = {
     val newSpells = spell.cardType match {
-      case FIX_LANTERN => spells.filter(_.cardType != BRAKE_LANTERN)
-      case FIX_TRUCK => spells.filter(_.cardType != BRAKE_TRUCK)
-      case FIX_PICK => spells.filter(_.cardType != BRAKE_PICK)
-      case FIX_LANTERN_PICK=> spells.find(_.cardType != BRAKE_TRUCK).map(c=> spells - c).getOrElse(spells)
-      case FIX_LANTERN_TRUCK=> spells.find(_.cardType != BRAKE_PICK).map(c=> spells - c).getOrElse(spells)
-      case FIX_PICK_TRUCK=> spells.find(_.cardType != BRAKE_LANTERN).map(c=> spells - c).getOrElse(spells)
+      case FIX_LANTERN => spells.filter(_.cardType != BREAK_LANTERN)
+      case FIX_TRUCK => spells.filter(_.cardType != BREAK_TRUCK)
+      case FIX_PICK => spells.filter(_.cardType != BREAK_PICK)
+      case FIX_LANTERN_PICK=> spells.find(_.cardType != BREAK_TRUCK).map(c=> spells - c).getOrElse(spells)
+      case FIX_LANTERN_TRUCK=> spells.find(_.cardType != BREAK_PICK).map(c=> spells - c).getOrElse(spells)
+      case FIX_PICK_TRUCK=> spells.find(_.cardType != BREAK_LANTERN).map(c=> spells - c).getOrElse(spells)
       case _  => spells + spell
     }
     if(spells.size > 2) this else Player(id, role, hand, newSpells, revelations)

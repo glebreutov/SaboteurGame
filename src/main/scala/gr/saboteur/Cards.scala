@@ -32,11 +32,11 @@ object ORE extends CardType
 class SpellCard extends CardType
 class  Curse extends CardType
 class  Crue extends CardType
-object  BRAKE_LANTERN extends CardType
+object  BREAK_LANTERN extends CardType
 object  FIX_LANTERN extends CardType
-object  BRAKE_TRUCK extends CardType
+object  BREAK_TRUCK extends CardType
 object  FIX_TRUCK extends CardType
-object  BRAKE_PICK extends CardType
+object  BREAK_PICK extends CardType
 object  FIX_PICK extends CardType
 object  FIX_LANTERN_PICK extends CardType
 object  FIX_PICK_TRUCK extends CardType
@@ -59,7 +59,7 @@ class Card(val cardType: CardType) extends Cloneable {
 
 object Card {
   var counter = 0
-  
+
   def seq() = {
     try{
       counter.toString
@@ -158,11 +158,11 @@ object Cards {
     deck ::= DungeonCard(DEADEND, Bottom)
     deck ::= DungeonCard(DEADEND, Left, Right)
     deck ::= DungeonCard(DEADEND, Right)
-    deck :::= new Card(BRAKE_PICK) * 3
+    deck :::= new Card(BREAK_PICK) * 3
     deck :::= new Card(FIX_PICK) * 2
-    deck :::= new Card(BRAKE_LANTERN) * 3
+    deck :::= new Card(BREAK_LANTERN) * 3
     deck :::= new Card(FIX_LANTERN) * 2
-    deck :::= new Card(BRAKE_TRUCK) * 3
+    deck :::= new Card(BREAK_TRUCK) * 3
     deck :::= new Card(FIX_TRUCK) * 2
     deck :::= new Card(REVEAL) * 6
     deck :::= new Card(BOOM) * 3
